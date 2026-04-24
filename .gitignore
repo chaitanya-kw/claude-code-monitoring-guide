@@ -1,0 +1,12 @@
+# Secrets and local overrides
+.env
+docker-compose.override.yml
+
+# Persistent data volumes
+grafana/data/
+grafana_data/
+prometheus/data/
+prometheus_data/
+
+# OS
+.DS_Store

@@ -1,23 +1,20 @@
 services:
-  # OpenTelemetry Collector
+  # OpenTelemetry Collector — publicly accessible for telemetry ingestion
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
-      - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP HTTP receiver
-      - "8889:8889"   # Prometheus metrics
+      - "0.0.0.0:4317:4317"   # OTLP gRPC — public
+      - "0.0.0.0:4318:4318"   # OTLP HTTP — public
     depends_on:
       - prometheus
 
-  # Prometheus
+  # Prometheus — internal only; exposed via nginx in prod
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    ports:
-      - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -29,12 +26,10 @@ services:
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
 
-  # Grafana
+  # Grafana — internal only; exposed via nginx in prod
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    ports:
-      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:?GF_SECURITY_ADMIN_PASSWORD must be set in .env}
@@ -43,6 +38,20 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
+      - prometheus
+
+  # nginx — prod only (docker compose --profile prod up -d)
+  # IP-restricts Grafana (port 80) and Prometheus (port 9090)
+  nginx:
+    image: nginx:alpine
+    profiles: [prod]
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:9090:9090"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - grafana
       - prometheus
 
 volumes:

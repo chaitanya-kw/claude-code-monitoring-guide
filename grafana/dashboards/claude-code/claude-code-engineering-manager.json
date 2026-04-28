@@ -1,0 +1,498 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Engineering manager view — cost governance, adoption visibility, and efficiency at a glance.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Total team cost month-to-date (last 30 days).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[30d]))",
+          "instant": true,
+          "legendFormat": "MTD Cost",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Team Cost — MTD",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Forward-looking spend projection: 7-day daily rate × 30.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(claude_code_cost_usage_USD_total[7d])) * 86400 * 30",
+          "instant": true,
+          "legendFormat": "Projected Monthly",
+          "refId": "A"
+        }
+      ],
+      "title": "Projected Monthly Cost",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Total AI-assisted hours across the whole team for the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "unit": "h"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(claude_code_active_time_seconds_total[$__range])) / 3600",
+          "instant": true,
+          "legendFormat": "AI-Assisted Hours",
+          "refId": "A"
+        }
+      ],
+      "title": "Total AI-Assisted Hours",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Team-wide cost per line of code changed. Direction matters more than the absolute value.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 4,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range]))\n/\n(\n  sum(increase(claude_code_lines_of_code_count_total{type=\"added\"}[$__range]))\n  + sum(increase(claude_code_lines_of_code_count_total{type=\"removed\"}[$__range]))\n)",
+          "instant": true,
+          "legendFormat": "Cost / Line",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost Per Line of Code — Team",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Daily cost trend. This is the primary signal for cost governance — all other panels on this dashboard provide context for understanding this trend.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 60, "gradientMode": "none", "lineWidth": 1 },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+      "id": 5,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fillOpacity": 60,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "orientation": "auto",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__interval]))",
+          "interval": "1d",
+          "legendFormat": "Daily Cost",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost Trend — Daily",
+      "type": "barchart"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Per-developer summary for the selected time range. Sessions data recorded from stack start only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" } },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "cost_usd" },
+            "properties": [{ "id": "unit", "value": "currencyUSD" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "active_time_hours" },
+            "properties": [{ "id": "unit", "value": "h" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "acceptance_rate_pct" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "red", "value": null },
+                    { "color": "yellow", "value": 50 },
+                    { "color": "green", "value": 70 }
+                  ]
+                }
+              },
+              { "id": "custom.cellOptions", "value": { "mode": "basic", "type": "color-background" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "countRows": false, "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "cost_usd" }]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (user_email) (increase(claude_code_cost_usage_USD_total[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "cost_usd",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "tokens",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (user_email) (increase(claude_code_session_count_total[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "sessions",
+          "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (user_email) (increase(claude_code_active_time_seconds_total[$__range])) / 3600",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "active_time_hours",
+          "refId": "D"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{decision=\"accept\"}[$__range]))\n  / sum by (user_email) (increase(claude_code_code_edit_tool_decision_total[$__range])) * 100",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "acceptance_rate_pct",
+          "refId": "E"
+        }
+      ],
+      "title": "Weekly Summary — All Developers",
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "user_email": "Developer",
+              "Value #A": "cost_usd",
+              "Value #B": "tokens",
+              "Value #C": "sessions",
+              "Value #D": "active_time_hours",
+              "Value #E": "acceptance_rate_pct"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Team-level model distribution — informs whether the team is using the right models for the right tasks.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "id": 7,
+      "options": {
+        "legend": { "displayMode": "table", "placement": "right", "values": ["percent", "value"] },
+        "pieType": "donut",
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total[$__range]))",
+          "legendFormat": "{{model}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Model Usage",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Team-wide acceptance rate trend. A falling rate while cost rises is the key risk signal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "fillOpacity": 10,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": false,
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 70 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "mean"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(claude_code_code_edit_tool_decision_total{decision=\"accept\"}[$__rate_interval]))\n/ sum(rate(claude_code_code_edit_tool_decision_total[$__rate_interval])) * 100",
+          "legendFormat": "team acceptance rate",
+          "refId": "A"
+        }
+      ],
+      "title": "Team-Wide Edit Acceptance Rate Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Daily active time (left) and session count (right) for the team. Useful context for onboarding or tooling changes. Daily bars eliminate session-boundary spikes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "lineWidth": 0,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "sessions" },
+            "properties": [
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "unit", "value": "short" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "active time (s)" },
+            "properties": [{ "id": "unit", "value": "s" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "id": 9,
+      "options": {
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(claude_code_active_time_seconds_total[$__interval]))",
+          "interval": "1d",
+          "legendFormat": "active time (s)",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(increase(claude_code_session_count_total[$__interval]))",
+          "interval": "1d",
+          "legendFormat": "sessions",
+          "refId": "B"
+        }
+      ],
+      "title": "Active Time vs Sessions — Team Total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Session count per developer — shows whether 1–2 devs are doing 80% of the usage.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 80, "gradientMode": "none" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "id": 10,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fillOpacity": 80,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "orientation": "horizontal",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (user_email) (increase(claude_code_session_count_total[$__range]))",
+          "legendFormat": "{{user_email}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Usage Distribution — Sessions by Developer",
+      "type": "barchart"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": ["claude-code", "engineering-manager"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30d", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Claude Code — Engineering Manager",
+  "uid": "cc-eng-manager",
+  "version": 1
+}

@@ -1,12 +1,13 @@
 apiVersion: 1
 
 providers:
-  - name: 'claude-code-dashboards'
+  - name: 'team-lead'
     orgId: 1
-    folder: 'Claude Code'
+    folder: 'Team Lead'
+    folderUid: 'f-team-lead'
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
     allowUiUpdates: true
     options:
-      path: /var/lib/grafana/dashboards/claude-code
+      path: /var/lib/grafana/dashboards/team-lead

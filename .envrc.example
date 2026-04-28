@@ -1,0 +1,10 @@
+# Copy this file to .envrc at the root of each repo you want to track.
+# Run `direnv allow` after creating or editing .envrc.
+# Replace <repo-name> with the repo's identifier (e.g. "api-server", "frontend").
+
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_METRICS_EXPORTER=otlp
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+export OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=delta
+export OTEL_RESOURCE_ATTRIBUTES=project=<repo-name>

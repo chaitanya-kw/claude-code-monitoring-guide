@@ -217,7 +217,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "count(sum by (user_email) (increase(claude_code_session_count_total[7d])) > 0)\n/\ncount(sum by (user_email) (increase(claude_code_session_count_total[30d])) > 0)\n* 100",
+          "expr": "count(count by (user_email) (count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[7d])) > 0)\n/\ncount(count by (user_email) (count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[30d])) > 0)\n* 100",
           "instant": true,
           "legendFormat": "Adoption Rate",
           "refId": "A"

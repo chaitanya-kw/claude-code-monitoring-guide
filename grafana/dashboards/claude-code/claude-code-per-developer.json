@@ -179,7 +179,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(increase(claude_code_active_time_seconds_total{user_email=\"$user_email\",project=~\"$project\"}[$__range]))\n/\nsum(increase(claude_code_session_count_total{user_email=\"$user_email\",project=~\"$project\"}[$__range]))",
+          "expr": "sum(increase(claude_code_active_time_seconds_total{user_email=\"$user_email\",project=~\"$project\"}[$__range]))\n/\ncount(count_over_time(claude_code_active_time_seconds_total{type=\"user\",user_email=\"$user_email\",project=~\"$project\"}[$__range]))",
           "instant": false,
           "legendFormat": "",
           "range": true,
@@ -350,7 +350,7 @@
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(increase(claude_code_session_count_total{user_email=\"$user_email\",project=~\"$project\"}[$__interval]))",
+          "expr": "count(count_over_time(claude_code_active_time_seconds_total{type=\"user\",user_email=\"$user_email\",project=~\"$project\"}[$__interval]))",
           "interval": "1d",
           "legendFormat": "sessions",
           "refId": "B"

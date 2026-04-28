@@ -154,7 +154,7 @@
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (user_email) (increase(claude_code_session_count_total[$__range]))",
+          "expr": "count by (user_email) (count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[$__range]))",
           "legendFormat": "{{user_email}}",
           "format": "table",
           "instant": true,
@@ -195,7 +195,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (user_email) (increase(claude_code_active_time_seconds_total[$__interval]))\n/\nsum by (user_email) (increase(claude_code_session_count_total[$__interval]))",
+          "expr": "sum by (user_email) (increase(claude_code_active_time_seconds_total[$__interval]))\n/\ncount by (user_email) (count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[$__interval]))",
           "interval": "1d",
           "legendFormat": "{{user_email}}",
           "refId": "A"
@@ -232,14 +232,14 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total[$__range]))",
-          "legendFormat": "{{user_email}}",
+          "format": "table",
           "instant": true,
           "refId": "A"
         }
       ],
       "title": "Token Usage by Developer",
       "transformations": [
-        { "id": "labelsToFields", "options": { "valueLabel": "user_email" } }
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Tokens", "user_email": "Developer" } } }
       ],
       "type": "barchart"
     },
@@ -275,14 +275,15 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "sum by (user_email, model) (increase(claude_code_token_usage_tokens_total[$__range]))",
-          "legendFormat": "{{user_email}} / {{model}}",
           "instant": true,
           "refId": "A"
         }
       ],
       "title": "Per Developer, Per Model Token Usage",
       "transformations": [
-        { "id": "labelsToFields", "options": { "valueLabel": "user_email" } }
+        { "id": "labelsToFields", "options": { "valueLabel": "model" } },
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "user_email": "Developer" } } }
       ],
       "type": "barchart"
     },
@@ -315,14 +316,14 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "topk(5, sum by (user_email) (rate(claude_code_token_usage_tokens_total[5m])))",
-          "legendFormat": "{{user_email}}",
+          "format": "table",
           "instant": true,
           "refId": "A"
         }
       ],
       "title": "Top Consumers Right Now",
       "transformations": [
-        { "id": "labelsToFields", "options": { "valueLabel": "user_email" } }
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Tokens/s", "user_email": "Developer" } } }
       ],
       "type": "barchart"
     }

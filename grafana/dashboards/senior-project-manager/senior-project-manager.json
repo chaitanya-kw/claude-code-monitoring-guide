@@ -281,7 +281,7 @@
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (user_email) (increase(claude_code_session_count_total[$__range]))",
+          "expr": "count by (user_email) (count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[$__range]))",
           "format": "table",
           "instant": true,
           "legendFormat": "sessions",
@@ -440,7 +440,7 @@
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(increase(claude_code_session_count_total[$__interval]))",
+          "expr": "count(count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[$__interval]))",
           "interval": "1d",
           "legendFormat": "sessions",
           "refId": "B"
@@ -475,13 +475,17 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum by (user_email) (increase(claude_code_session_count_total[$__range]))",
-          "legendFormat": "{{user_email}}",
+          "expr": "count by (user_email) (count_over_time(claude_code_active_time_seconds_total{type=\"user\"}[$__range]))",
+          "format": "table",
+          "legendFormat": "Sessions",
           "instant": true,
           "refId": "A"
         }
       ],
       "title": "Usage Distribution — Sessions by Developer",
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Sessions", "user_email": "Developer" } } }
+      ],
       "type": "barchart"
     }
   ],

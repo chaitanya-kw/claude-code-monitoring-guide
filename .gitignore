@@ -1,5 +1,6 @@
 # Secrets and local overrides
 .env
+.mcp.json
 docker-compose.override.yml
 
 # Persistent data volumes

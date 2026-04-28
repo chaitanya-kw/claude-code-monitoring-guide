@@ -13,6 +13,13 @@ processors:
   memory_limiter:
     check_interval: 1s
     limit_mib: 512
+  transform/promote_project:
+    error_mode: ignore
+    metric_statements:
+      - context: datapoint
+        statements:
+          - set(attributes["project"], resource.attributes["project"]) where resource.attributes["project"] != nil
+          - set(attributes["project"], "unknown") where resource.attributes["project"] == nil
 
 exporters:
   prometheus:
@@ -30,7 +37,7 @@ service:
   pipelines:
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
+      processors: [memory_limiter, transform/promote_project, batch]
       exporters: [prometheus, debug]
       
   extensions: []

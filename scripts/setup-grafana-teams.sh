@@ -85,14 +85,15 @@ ensure_team() {
 # Permission values: 1=Viewer, 2=Editor, 4=Admin
 set_folder_permissions() {
   local folder_uid="$1"; shift
-  local items="[" first=1
+  local items="["
+  local first=1
   while [ "$#" -gt 0 ]; do
     local tid=$1 perm=$2; shift 2
-    [ "$first" -eq 0 ] && items+=","
-    items+="{\"teamId\":$tid,\"permission\":$perm}"
+    [ "$first" -eq 0 ] && items="${items},"
+    items="${items}{\"teamId\":$tid,\"permission\":$perm}"
     first=0
   done
-  items+="]"
+  items="${items}]"
   response="$(gf_post "/folders/$folder_uid/permissions" "{\"items\":$items}")"
   json_field "$response" "message"
 }

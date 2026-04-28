@@ -275,14 +275,15 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "sum by (user_email, model) (increase(claude_code_token_usage_tokens_total[$__range]))",
-          "format": "table",
           "instant": true,
           "refId": "A"
         }
       ],
       "title": "Per Developer, Per Model Token Usage",
       "transformations": [
-        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value": "Tokens", "user_email": "Developer" } } }
+        { "id": "labelsToFields", "options": { "valueLabel": "model" } },
+        { "id": "merge", "options": {} },
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "user_email": "Developer" } } }
       ],
       "type": "barchart"
     },

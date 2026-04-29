@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -12,7 +15,7 @@
       }
     ]
   },
-  "description": "Team-level Claude Code metrics for engineering leads. Identify adoption outliers, coach on prompting, spot engagement pattern shifts. Focus: tokens and time — not cost.",
+  "description": "Team-level Claude Code metrics for engineering leads. Identify adoption outliers, coach on prompting, spot engagement pattern shifts. Focus: tokens and time \u2014 not cost.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -21,37 +24,61 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Edit acceptance rate per developer over time. Spot team-wide drops after model updates. Individual lines reveal who is improving and who needs coaching.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 5,
             "lineWidth": 2,
             "showPoints": "never",
             "spanNulls": false,
-            "thresholdsStyle": { "mode": "line+area" }
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
           },
           "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "transparent", "value": null },
-              { "color": "transparent", "value": 50 },
-              { "color": "transparent", "value": 70 }
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "transparent",
+                "value": 50
+              },
+              {
+                "color": "transparent",
+                "value": 70
+              }
             ]
           },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull", "mean"],
+          "calcs": [
+            "lastNotNull",
+            "mean"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -63,49 +90,86 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "sum by (user_email) (rate(claude_code_code_edit_tool_decision_total{decision=\"accept\",project=~\"$project\"}[$__rate_interval]))\n/\nsum by (user_email) (rate(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__rate_interval]))\n* 100",
           "legendFormat": "{{user_email}}",
           "refId": "A"
         }
       ],
-      "title": "Acceptance Rate Trend — All Developers",
+      "title": "Acceptance Rate Trend \u2014 All Developers",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Snapshot acceptance rate per developer. Sort ascending to surface lowest performers.",
       "fieldConfig": {
         "defaults": {
           "custom": {
             "align": "auto",
-            "cellOptions": { "type": "color-background" },
+            "cellOptions": {
+              "type": "color-background"
+            },
             "filterable": false,
             "inspect": false
           },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "green", "value": 70 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 70
+              }
             ]
           },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
       "id": 2,
       "options": {
         "cellHeight": "sm",
-        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true,
-        "sortBy": [{ "desc": true, "displayName": "Acceptance Rate %" }]
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Acceptance Rate %"
+          }
+        ]
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{decision=\"accept\",project=~\"$project\"}[$__range]))\n/\nsum by (user_email) (increase(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__range]))\n* 100",
           "format": "table",
           "instant": true,
@@ -118,7 +182,9 @@
         {
           "id": "organize",
           "options": {
-            "excludeByName": { "Time": true },
+            "excludeByName": {
+              "Time": true
+            },
             "renameByName": {
               "Value": "Acceptance Rate %",
               "user_email": "Developer"
@@ -129,11 +195,16 @@
       "type": "table"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
-      "description": "API request rate per developer — engagement intensity proxy that works for all surfaces including VS Code.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "API request rate per developer \u2014 engagement intensity proxy that works for all surfaces including VS Code.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 5,
             "lineWidth": 2,
@@ -143,11 +214,18 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
       "id": 3,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -159,8 +237,11 @@
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__interval]) by (user_email)",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__interval]))",
           "legendFormat": "{{user_email}}",
           "refId": "A"
         }
@@ -169,11 +250,16 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Token volume per developer — reveals who is and is not using Claude Code.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Token volume per developer \u2014 reveals who is and is not using Claude Code.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80
           },
@@ -181,21 +267,36 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 17 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
       "id": 4,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 200
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))",
           "format": "table",
           "instant": true,
@@ -206,12 +307,16 @@
       "title": "Token Usage by Developer",
       "transformations": [
         {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
           "id": "organize",
           "options": {
-            "excludeByName": { "Time": true },
-            "renameByName": {
-              "Value": "Tokens",
-              "user_email": "Developer"
+            "excludeByName": {
+              "Time": true
             }
           }
         }
@@ -219,11 +324,16 @@
       "type": "barchart"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "description": "Session depth per developer. Pair with acceptance rate: low acceptance + low depth = prompting problems; low acceptance + high depth = model fit issue.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80
           },
@@ -232,35 +342,71 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 17 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
       "id": 5,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xField": "user_email"
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]) by (user_email)\n/\ncount(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]) by (user_email, session_id)) by (user_email)",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))\n/\ncount(sum by (user_email, session_id) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))) by (user_email)",
           "legendFormat": "{{user_email}}",
           "queryType": "instant",
           "refId": "A"
         }
       ],
       "title": "Requests Per Session by Developer",
-      "type": "barchart"
+      "type": "barchart",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Which models each developer uses. Flags unintended model choices across the team.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80
           },
@@ -268,22 +414,37 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
       "id": 6,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "auto",
         "stacking": "normal",
-        "tooltip": { "mode": "multi", "sort": "none" },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 200
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "sum by (user_email, model) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))",
           "format": "table",
           "instant": true,
@@ -306,7 +467,9 @@
         {
           "id": "organize",
           "options": {
-            "excludeByName": { "Time": true },
+            "excludeByName": {
+              "Time": true
+            },
             "renameByName": {
               "user_email": "Developer"
             }
@@ -316,11 +479,16 @@
       "type": "barchart"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Who is running agentic multi-step tasks vs simple completions. Contextualises token volume.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80
           },
@@ -328,21 +496,36 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 25 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
       "id": 7,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 200
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total{query_source=\"subagent\",project=~\"$project\"}[$__range]))\n/\nsum by (user_email) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))\n* 100",
           "format": "table",
           "instant": true,
@@ -353,12 +536,16 @@
       "title": "Subagent Token Fraction by Developer",
       "transformations": [
         {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
           "id": "organize",
           "options": {
-            "excludeByName": { "Time": true },
-            "renameByName": {
-              "Value": "Subagent %",
-              "user_email": "Developer"
+            "excludeByName": {
+              "Time": true
             }
           }
         }
@@ -366,11 +553,16 @@
       "type": "barchart"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "description": "Work pattern characterisation. >1 = execution-heavy; <1 = code-modification-heavy. Useful context when investigating token volume or acceptance rate.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80,
             "axisLabel": "Bash / Edit ratio"
@@ -379,34 +571,70 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
       "id": 8,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" }
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | tool_name=\"Bash\" [$__range]) by (user_email)\n/\ncount_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | tool_name=\"Edit\" [$__range]) by (user_email)",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | tool_name=\"Bash\" [$__range]))\n/\nsum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | tool_name=\"Edit\" [$__range]))",
           "legendFormat": "{{user_email}}",
           "queryType": "instant",
           "refId": "A"
         }
       ],
       "title": "Bash vs Edit Ratio by Developer",
-      "type": "barchart"
+      "type": "barchart",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "description": "Who is running deep agentic tasks vs shallow conversational sessions. Contextualises token volume.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80,
             "axisLabel": "tools / request"
@@ -415,30 +643,64 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
       "id": 9,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" }
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" [$__range]) by (user_email)\n/\ncount_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]) by (user_email)",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" [$__range]))\n/\nsum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))",
           "legendFormat": "{{user_email}}",
           "queryType": "instant",
           "refId": "A"
         }
       ],
       "title": "Tool Call Depth by Developer",
-      "type": "barchart"
+      "type": "barchart",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "description": "High failure rate = environment issues or tasks Claude Code is not suited for.",
       "fieldConfig": {
         "defaults": {
@@ -451,17 +713,32 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 41 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
       "id": 10,
       "options": {
         "cellHeight": "sm",
-        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | success=\"false\" [$__range]) by (user_email)\n/\ncount_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" [$__range]) by (user_email)\n* 100",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" | success=\"false\" [$__range]))\n/\nsum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"tool_result\" [$__range]))\n* 100",
           "legendFormat": "{{user_email}}",
           "queryType": "instant",
           "refId": "A"
@@ -471,11 +748,16 @@
       "type": "table"
     },
     {
-      "datasource": { "type": "loki", "uid": "loki" },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
       "description": "Volume of working sessions per developer. Normalises token usage.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80
           },
@@ -483,34 +765,70 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 41 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
       "id": 11,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" }
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": { "type": "loki", "uid": "loki" },
-          "expr": "count by (user_email) (\n  count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]) by (user_email, session_id)\n)",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "count by (user_email) (\n  sum by (user_email, session_id) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))\n)",
           "legendFormat": "{{user_email}}",
           "queryType": "instant",
           "refId": "A"
         }
       ],
       "title": "Session Count by Developer",
-      "type": "barchart"
+      "type": "barchart",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ]
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Top 5 developers by token rate in the last 5 minutes — who is actively using Claude Code right now.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Top 5 developers by token rate in the last 5 minutes \u2014 who is actively using Claude Code right now.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80
           },
@@ -518,22 +836,37 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 49 },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
       "id": 12,
       "interval": "30s",
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
         "groupWidth": 0.7,
-        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 200
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "expr": "topk(5, sum by (user_email) (rate(claude_code_token_usage_tokens_total{project=~\"$project\"}[5m])))",
           "format": "table",
           "instant": true,
@@ -544,12 +877,16 @@
       "title": "Top Consumers Right Now",
       "transformations": [
         {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "user_email"
+          }
+        },
+        {
           "id": "organize",
           "options": {
-            "excludeByName": { "Time": true },
-            "renameByName": {
-              "Value": "Tokens/s",
-              "user_email": "Developer"
+            "excludeByName": {
+              "Time": true
             }
           }
         }
@@ -559,7 +896,10 @@
   ],
   "refresh": "30s",
   "schemaVersion": 38,
-  "tags": ["claude-code", "team-lead"],
+  "tags": [
+    "claude-code",
+    "team-lead"
+  ],
   "templating": {
     "list": [
       {
@@ -568,7 +908,10 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "definition": "label_values(claude_code_token_usage_tokens_total, project)",
         "hide": 0,
         "includeAll": true,
@@ -588,7 +931,10 @@
       }
     ]
   },
-  "time": { "from": "now-7d", "to": "now" },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "Team Lead",

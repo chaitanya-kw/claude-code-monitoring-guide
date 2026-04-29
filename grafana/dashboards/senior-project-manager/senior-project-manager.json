@@ -5,7 +5,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -14,7 +17,7 @@
       }
     ]
   },
-  "description": "Engineering manager view — cost governance, adoption visibility, efficiency at a glance.",
+  "description": "Engineering manager view \u2014 cost governance, adoption visibility, efficiency at a glance.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -23,22 +26,36 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Daily cost trend. The primary signal for cost governance — all other panels contextualise this.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Daily cost trend. The primary signal for cost governance \u2014 all other panels contextualise this.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineWidth": 1
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
         "barRadius": 0,
@@ -54,13 +71,19 @@
         "orientation": "auto",
         "showValue": "auto",
         "stacking": "none",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 100
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__interval]))",
           "interval": "1d",
@@ -73,7 +96,10 @@
       "type": "barchart"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -84,16 +110,30 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 100 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
             ]
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 9 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
       "id": 2,
       "options": {
         "colorMode": "value",
@@ -101,7 +141,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -109,7 +151,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[30d]))",
           "instant": true,
@@ -117,12 +162,15 @@
           "refId": "A"
         }
       ],
-      "title": "Total Team Cost — MTD",
+      "title": "Total Team Cost \u2014 MTD",
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "Forward-looking: 7-day daily rate × 30.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Forward-looking: 7-day daily rate \u00d7 30.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -132,16 +180,30 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 100 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
             ]
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 9 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 9
+      },
       "id": 3,
       "options": {
         "colorMode": "value",
@@ -149,7 +211,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -157,7 +221,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(rate(claude_code_cost_usage_USD_total{project=~\"$project\"}[7d])) * 86400 * 30",
           "instant": true,
@@ -169,7 +236,10 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Direction matters more than absolute value.",
       "fieldConfig": {
         "defaults": {
@@ -181,14 +251,22 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 9 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
       "id": 4,
       "options": {
         "colorMode": "value",
@@ -196,7 +274,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -204,7 +284,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__range]))\n/\n(\n  sum(increase(claude_code_lines_of_code_count_total{type=\"added\",project=~\"$project\"}[$__range]))\n  + sum(increase(claude_code_lines_of_code_count_total{type=\"removed\",project=~\"$project\"}[$__range]))\n)",
           "instant": true,
@@ -216,7 +299,10 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Rough ROI proxy. Direction matters more than absolute value.",
       "fieldConfig": {
         "defaults": {
@@ -228,14 +314,22 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 9 },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
       "id": 5,
       "options": {
         "colorMode": "value",
@@ -243,7 +337,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -251,7 +347,10 @@
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__range]))\n/\nsum(increase(claude_code_commit_count_total{project=~\"$project\"}[$__range]))",
           "instant": true,
@@ -263,67 +362,118 @@
       "type": "stat"
     },
     {
-      "datasource": { "type": "datasource", "uid": "-- Mixed --" },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "custom": {
             "align": "auto",
-            "cellOptions": { "type": "auto" },
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null }
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Cost (USD)" },
+            "matcher": {
+              "id": "byName",
+              "options": "Cost (USD)"
+            },
             "properties": [
-              { "id": "unit", "value": "currencyUSD" }
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Acceptance %" },
+            "matcher": {
+              "id": "byName",
+              "options": "Acceptance %"
+            },
             "properties": [
-              { "id": "unit", "value": "percent" },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
               {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
                   "steps": [
-                    { "color": "red", "value": null },
-                    { "color": "yellow", "value": 50 },
-                    { "color": "green", "value": 70 }
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 50
+                    },
+                    {
+                      "color": "green",
+                      "value": 70
+                    }
                   ]
                 }
               },
               {
                 "id": "custom.cellOptions",
-                "value": { "type": "color-background" }
+                "value": {
+                  "type": "color-background"
+                }
               }
             ]
           }
         ]
       },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 13 },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
       "id": 6,
       "options": {
         "cellHeight": "sm",
-        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true,
         "sortBy": [
-          { "desc": true, "displayName": "Cost (USD)" }
+          {
+            "desc": true,
+            "displayName": "Cost (USD)"
+          }
         ]
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (user_email) (increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__range]))",
           "format": "table",
@@ -332,7 +482,10 @@
           "refId": "A"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))",
           "format": "table",
@@ -341,7 +494,10 @@
           "refId": "B"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (user_email) (increase(claude_code_commit_count_total{project=~\"$project\"}[$__range]))",
           "format": "table",
@@ -350,7 +506,10 @@
           "refId": "C"
         },
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{decision=\"accept\",project=~\"$project\"}[$__range]))\n  / sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__range])) * 100",
           "format": "table",
@@ -359,16 +518,19 @@
           "refId": "D"
         },
         {
-          "datasource": { "type": "loki", "uid": "loki" },
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
           "editorMode": "code",
-          "expr": "count by (user_email) (\n  count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]) by (user_email, session_id)\n)",
+          "expr": "count by (user_email) (\n  sum by (user_email, session_id) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__range]))\n)",
           "instant": true,
           "queryType": "instant",
           "legendFormat": "__auto",
           "refId": "E"
         }
       ],
-      "title": "Weekly Summary — All Developers",
+      "title": "Weekly Summary \u2014 All Developers",
       "transformations": [
         {
           "id": "merge",
@@ -395,22 +557,36 @@
       "type": "table"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Where spend is going across projects. Useful for client attribution.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineWidth": 1
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 21
+      },
       "id": 7,
       "options": {
         "barRadius": 0,
@@ -426,13 +602,19 @@
         "orientation": "horizontal",
         "showValue": "auto",
         "stacking": "none",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 100
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (project) (increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__range]))",
           "format": "table",
@@ -444,15 +626,16 @@
       "title": "Cost by Project",
       "transformations": [
         {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "project"
+          }
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "Value": "Cost",
-              "project": "Project"
             }
           }
         }
@@ -460,34 +643,59 @@
       "type": "barchart"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Subagent fraction = agentic usage depth. Rising subagent fraction = team tackling more complex autonomous tasks.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false }
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           },
           "unit": "currencyUSD"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 21
+      },
       "id": 8,
       "options": {
-        "displayLabels": ["percent"],
+        "displayLabels": [
+          "percent"
+        ],
         "legend": {
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "values": ["percent", "value"]
+          "values": [
+            "percent",
+            "value"
+          ]
         },
         "pieType": "donut",
-        "tooltip": { "mode": "single", "sort": "none" }
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (query_source) (increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__range]))",
           "instant": true,
@@ -499,22 +707,36 @@
       "type": "piechart"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Team-wide model distribution. Informs whether the team is using the right models for the right tasks.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 80,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineWidth": 1
           },
           "unit": "short"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 29 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 29
+      },
       "id": 9,
       "options": {
         "barRadius": 0,
@@ -530,13 +752,19 @@
         "orientation": "horizontal",
         "showValue": "auto",
         "stacking": "none",
-        "tooltip": { "mode": "single", "sort": "none" },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 100
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))",
           "format": "table",
@@ -548,15 +776,16 @@
       "title": "Overall Model Usage",
       "transformations": [
         {
+          "id": "labelsToFields",
+          "options": {
+            "valueLabel": "model"
+          }
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "Value": "Tokens",
-              "model": "Model"
             }
           }
         }
@@ -564,48 +793,82 @@
       "type": "barchart"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "description": "Falling acceptance while cost rises is the key risk signal.",
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "fillOpacity": 10,
             "gradientMode": "none",
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "lineWidth": 2,
             "showPoints": "never",
             "spanNulls": false,
-            "thresholdsStyle": { "mode": "line" }
+            "thresholdsStyle": {
+              "mode": "line"
+            }
           },
           "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "green", "value": 70 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 70
+              }
             ]
           },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 29 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 29
+      },
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["lastNotNull", "mean"],
+          "calcs": [
+            "lastNotNull",
+            "mean"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
-        "tooltip": { "mode": "single", "sort": "none" }
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
           "editorMode": "code",
           "expr": "sum(rate(claude_code_code_edit_tool_decision_total{decision=\"accept\",project=~\"$project\"}[$__rate_interval]))\n/ sum(rate(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__rate_interval])) * 100",
           "legendFormat": "team acceptance rate",
@@ -619,7 +882,10 @@
   ],
   "refresh": "",
   "schemaVersion": 38,
-  "tags": ["claude-code", "engineering-manager"],
+  "tags": [
+    "claude-code",
+    "engineering-manager"
+  ],
   "templating": {
     "list": [
       {
@@ -628,7 +894,10 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
         "definition": "label_values(claude_code_cost_usage_USD_total, project)",
         "hide": 0,
         "includeAll": true,
@@ -648,7 +917,10 @@
       }
     ]
   },
-  "time": { "from": "now-30d", "to": "now" },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "Senior Project Manager",

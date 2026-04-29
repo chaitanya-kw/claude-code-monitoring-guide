@@ -20,17 +20,6 @@ processors:
         statements:
           - set(attributes["project"], resource.attributes["project"]) where resource.attributes["project"] != nil
           - set(attributes["project"], "unknown") where resource.attributes["project"] == nil
-  transform/loki_labels:
-    error_mode: ignore
-    log_statements:
-      - context: log
-        statements:
-          # These become indexed Loki stream labels (low cardinality — keep this list short)
-          - set(attributes["loki.attribute.labels"], "event.name,user.email,project,os.type,service.version")
-      - context: resource
-        statements:
-          - set(attributes["loki.resource.labels"], "service.name")
-
 exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
@@ -38,13 +27,10 @@ exporters:
     metric_expiration: 180m
     enable_open_metrics: true
 
-  loki:
-    endpoint: http://loki:3100/loki/api/v1/push
-    default_labels_enabled:
-      exporter: false
-      job: false
-      level: true
-      service_name: true
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
 
   debug:
     verbosity: detailed
@@ -59,8 +45,8 @@ service:
       exporters: [prometheus, debug]
     logs:
       receivers: [otlp]
-      processors: [memory_limiter, transform/loki_labels, batch]
-      exporters: [loki, debug]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp/loki, debug]
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch]

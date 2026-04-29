@@ -27,9 +27,20 @@ schema_config:
         period: 24h
 
 limits_config:
-  allow_structured_metadata: true   # high-cardinality attrs (session.id, request_id etc) land here
+  allow_structured_metadata: true
   volume_enabled: true
-  reject_old_samples: false          # accept back-dated events from CLI sessions
+  reject_old_samples: false
+  otlp_config:
+    resource_attributes:
+      attributes_config:
+        - action: index_label
+          attributes:
+            - service.name
+            - user.email
+            - project
+            - os.type
+            - service.version
+            - event.name
 
 query_range:
   results_cache:

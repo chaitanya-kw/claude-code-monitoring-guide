@@ -388,8 +388,7 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 100,
-        "colorByField": "language"
+        "xTickLabelSpacing": 100
       },
       "targets": [
         {
@@ -407,11 +406,10 @@
       "title": "Edit Acceptance Rate by Language",
       "transformations": [
         {
-          "id": "organize",
+          "id": "rowsToFields",
           "options": {
-            "excludeByName": {
-              "Time": true
-            }
+            "nameField": "language",
+            "valueField": "Value"
           }
         }
       ],
@@ -634,7 +632,8 @@
           },
           "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"tool_result\" [$__interval]))",
           "legendFormat": "{{tool_name}}",
-          "refId": "A"
+          "refId": "A",
+          "step": "1d"
         }
       ],
       "title": "Tool Call Mix Over Time",
@@ -794,8 +793,7 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 100,
-        "colorByField": "model"
+        "xTickLabelSpacing": 100
       },
       "targets": [
         {
@@ -813,11 +811,10 @@
       "title": "Model Usage",
       "transformations": [
         {
-          "id": "organize",
+          "id": "rowsToFields",
           "options": {
-            "excludeByName": {
-              "Time": true
-            }
+            "nameField": "model",
+            "valueField": "Value"
           }
         }
       ],

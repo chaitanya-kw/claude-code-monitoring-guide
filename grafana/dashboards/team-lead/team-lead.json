@@ -289,8 +289,7 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200,
-        "colorByField": "Developer"
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -308,14 +307,10 @@
       "title": "Token Usage by Developer",
       "transformations": [
         {
-          "id": "organize",
+          "id": "rowsToFields",
           "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "user_email": "Developer"
-            }
+            "nameField": "user_email",
+            "valueField": "Value"
           }
         }
       ],
@@ -520,8 +515,7 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200,
-        "colorByField": "Developer"
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -539,14 +533,10 @@
       "title": "Subagent Token Fraction by Developer",
       "transformations": [
         {
-          "id": "organize",
+          "id": "rowsToFields",
           "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "user_email": "Developer"
-            }
+            "nameField": "user_email",
+            "valueField": "Value"
           }
         }
       ],
@@ -871,8 +861,7 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200,
-        "colorByField": "Developer"
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -890,14 +879,10 @@
       "title": "Top Consumers Right Now",
       "transformations": [
         {
-          "id": "organize",
+          "id": "rowsToFields",
           "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "user_email": "Developer"
-            }
+            "nameField": "user_email",
+            "valueField": "Value"
           }
         }
       ],

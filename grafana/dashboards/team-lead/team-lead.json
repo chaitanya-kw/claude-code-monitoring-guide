@@ -289,7 +289,8 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200
+        "xTickLabelSpacing": 200,
+        "colorByField": "Developer"
       },
       "targets": [
         {
@@ -307,16 +308,13 @@
       "title": "Token Usage by Developer",
       "transformations": [
         {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "user_email": "Developer"
             }
           }
         }
@@ -385,6 +383,10 @@
           "options": {
             "valueLabel": "user_email"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         },
         {
           "id": "organize",
@@ -518,7 +520,8 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200
+        "xTickLabelSpacing": 200,
+        "colorByField": "Developer"
       },
       "targets": [
         {
@@ -536,16 +539,13 @@
       "title": "Subagent Token Fraction by Developer",
       "transformations": [
         {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "user_email": "Developer"
             }
           }
         }
@@ -613,6 +613,10 @@
           "options": {
             "valueLabel": "user_email"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         },
         {
           "id": "organize",
@@ -685,6 +689,10 @@
           "options": {
             "valueLabel": "user_email"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         },
         {
           "id": "organize",
@@ -809,6 +817,10 @@
           }
         },
         {
+          "id": "merge",
+          "options": {}
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {
@@ -859,7 +871,8 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200
+        "xTickLabelSpacing": 200,
+        "colorByField": "Developer"
       },
       "targets": [
         {
@@ -877,16 +890,13 @@
       "title": "Top Consumers Right Now",
       "transformations": [
         {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "user_email": "Developer"
             }
           }
         }

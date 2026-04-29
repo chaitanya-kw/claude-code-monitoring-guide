@@ -607,7 +607,8 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 100
+        "xTickLabelSpacing": 100,
+        "colorByField": "project"
       },
       "targets": [
         {
@@ -625,12 +626,6 @@
       ],
       "title": "Cost by Project",
       "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "project"
-          }
-        },
         {
           "id": "organize",
           "options": {
@@ -757,7 +752,8 @@
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 100
+        "xTickLabelSpacing": 100,
+        "colorByField": "model"
       },
       "targets": [
         {
@@ -775,12 +771,6 @@
       ],
       "title": "Overall Model Usage",
       "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "model"
-          }
-        },
         {
           "id": "organize",
           "options": {

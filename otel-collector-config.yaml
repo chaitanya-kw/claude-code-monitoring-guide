@@ -27,7 +27,7 @@ exporters:
     metric_expiration: 180m
     enable_open_metrics: true
 
-  otlphttp/loki:
+  otlp_http/loki:
     endpoint: http://loki:3100/otlp
     tls:
       insecure: true
@@ -46,7 +46,7 @@ service:
     logs:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [otlphttp/loki, debug]
+      exporters: [otlp_http/loki, debug]
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch]

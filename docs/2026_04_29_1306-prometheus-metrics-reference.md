@@ -1,357 +1,611 @@
-# Prometheus Metrics Reference
+# Telemetry Reference — Prometheus & Loki
 
-Source: local Prometheus instance (`localhost:9090`)  
-Generated: 2026-04-29 13:06 IST  
-Total series: 352 | Unique base metrics: 267
-
-Counters are stored in Prometheus with a `_total` suffix (e.g. `claude_code_session_count_total`). The base name (without `_total`) is what appears in metadata and what you use when constructing `rate()` or `increase()` queries via `<base>_total`.
-
-Histograms expose three series per metric: `_bucket`, `_count`, `_sum`.  
-Summaries expose `_count`, `_sum`, plus quantile label series.
+Source: live VM stack (`prometheus:9090`, `loki:3100`)
+Generated: 2026-04-29, updated 13:50 IST
+Prometheus series: 352 | Loki services: `claude-code`, `gemini-cli`
 
 ---
 
+## How to read this document
+
+**Prometheus** stores named numeric time series. Counters are queried as `<base>_total`. Use `rate(<metric>_total[5m])` for per-second rates, `increase(<metric>_total[1h])` for totals over a window. Labels filter series.
+
+**Loki** stores structured log events. The `line` field is the human-readable summary. All rich context is in `structuredMetadata`. Query with `{service_name="claude-code"} | logfmt` or filter by metadata field: `{service_name="claude-code"} | logfmt | event_name="api_request"`.
+
+**Loki stream labels** (indexed, use in `{}` selector): `service_name`, `service_version`, `project`, `os_type`
+
+**Loki structured metadata** (not indexed, use after `| logfmt`): all other fields — `user_email`, `session_id`, `model`, `cost_usd`, etc.
+
+---
+
+# Part 1 — Prometheus Metrics
+
 ## claude_code — Primary project metrics
 
-These are the signals emitted by Claude Code CLI via OTel and relabelled by the collector.
+All `claude_code_*` metrics share a common set of labels. Differences per metric are noted under each entry.
 
-| Prometheus metric (queried as) | Type | Description |
+### Common labels on all claude_code_* metrics
+
+| Label | Example values | Notes |
 |---|---|---|
-| `claude_code_active_time_seconds_total` | counter | Total active time in seconds |
-| `claude_code_code_edit_tool_decision_total` | counter | Permission decisions (accept/reject) for Edit, Write, NotebookEdit tools |
-| `claude_code_commit_count_total` | counter | Number of git commits created |
-| `claude_code_cost_usage_USD_total` | counter | Cost of the Claude Code session in USD |
-| `claude_code_lines_of_code_count_total` | counter | Lines of code modified; `type` label = `added` or `removed` |
-| `claude_code_pull_request_count_total` | counter | Number of pull requests created |
-| `claude_code_session_count_total` | counter | Count of CLI sessions started |
-| `claude_code_token_usage_tokens_total` | counter | Number of tokens used |
+| `user_email` | `chaitanya.chowgule@kilowott.com`, `ajaj.rajguru@kilowott.com`, `tushar.ghatwal@kilowott.com` | Primary identity label for per-dev filtering |
+| `user_id` | `8c17bc2a10944aad…` | SHA-256 hash of user identity |
+| `user_account_id` | `user_01Pmf3Km2vhwrs9Fzj82WinH` | Anthropic account ID |
+| `user_account_uuid` | `b865382b-db28-44e1-96fc-0cc722b14afe` | Anthropic account UUID |
+| `organization_id` | `d706bcff-05bb-483c-a49a-84f9aad43ed8` | Kilowott org — constant across all devs |
+| `project` | `claude-code-monitoring-guide`, `unknown` | Set via `OTEL_RESOURCE_ATTRIBUTES`; `unknown` if run outside a tagged repo |
+| `session_id` | `393726da-284f-423b-abb6-49fa9cf99efa` | One per CLI session; high cardinality |
+| `terminal_type` | `kitty`, `windows-terminal`, `non-interactive` | Terminal environment |
+| `otel_scope_name` | `com.anthropic.claude_code` | Instrumentation scope — constant |
+| `otel_scope_version` | `2.1.121`, `2.1.123` | Claude Code version |
 
-**Known labels on `claude_code_*` metrics:** `user_id` (UUID→email mapped at collector), `project` (from `OTEL_RESOURCE_ATTRIBUTES` or `"unknown"`), `model`, `type` (where applicable).
+---
+
+### `claude_code_token_usage_tokens_total`
+
+**Type:** counter | **Unit:** tokens
+
+Tokens consumed per API call, broken down by token category. This is the primary metric for cost attribution and cache efficiency.
+
+**Additional labels:**
+
+| Label | Values | Notes |
+|---|---|---|
+| `type` | `input`, `output`, `cacheCreation`, `cacheRead` | Split token spend by category |
+| `model` | `claude-opus-4-7[1m]`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` | Model used for the request |
+| `effort` | `xhigh`, `medium` | Extended thinking effort level; absent when thinking disabled |
+| `query_source` | `main`, `subagent`, `auxiliary` | What initiated the request: main thread, a subagent, or background work |
+
+**Example queries:**
+
+```promql
+# Total tokens per developer (all time)
+sum by (user_email) (claude_code_token_usage_tokens_total)
+
+# Cache hit rate (fraction of tokens served from cache)
+sum by (user_email) (claude_code_token_usage_tokens_total{type="cacheRead"})
+/
+sum by (user_email) (claude_code_token_usage_tokens_total{type=~"input|cacheRead|cacheCreation"})
+
+# Token rate by model over last hour
+sum by (model) (increase(claude_code_token_usage_tokens_total[1h]))
+
+# Input + output tokens only (excludes cache)
+sum by (user_email) (claude_code_token_usage_tokens_total{type=~"input|output"})
+```
+
+---
+
+### `claude_code_cost_usage_USD_total`
+
+**Type:** counter | **Unit:** USD
+
+Cumulative API cost in USD. One series per (user, session, model, effort, query_source) combination.
+
+**Additional labels:**
+
+| Label | Values | Notes |
+|---|---|---|
+| `model` | `claude-opus-4-7[1m]`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` | |
+| `effort` | `xhigh`, `medium` | |
+| `query_source` | `main`, `subagent`, `auxiliary` | |
+
+**Example values:** `0.038`, `0.545`, `3.407` (cumulative USD per session)
+
+**Example queries:**
+
+```promql
+# Total spend per developer
+sum by (user_email) (claude_code_cost_usage_USD_total)
+
+# Daily spend rate
+sum by (user_email) (increase(claude_code_cost_usage_USD_total[24h]))
+
+# Cost breakdown by model
+sum by (model) (claude_code_cost_usage_USD_total)
+
+# Cost by project
+sum by (project) (claude_code_cost_usage_USD_total)
+```
+
+---
+
+### `claude_code_active_time_seconds_total`
+
+**Type:** counter | **Unit:** seconds
+
+Time Claude Code was active, split by activity type.
+
+**Additional labels:**
+
+| Label | Values | Notes |
+|---|---|---|
+| `type` | `user`, `cli` | `user` = time user was interacting; `cli` = total CLI wall-clock time |
+
+**Example values:** `61.8s` (user active), `518.3s` (cli running)
+
+**Example queries:**
+
+```promql
+# Active time per developer (user interaction only)
+sum by (user_email) (claude_code_active_time_seconds_total{type="user"})
+
+# Sessions running right now (CLI active in last 5 min)
+count by (user_email) (rate(claude_code_active_time_seconds_total{type="cli"}[5m]) > 0)
+```
+
+---
+
+### `claude_code_lines_of_code_count_total`
+
+**Type:** counter | **Unit:** lines
+
+Lines of code modified by Claude Code edits.
+
+**Additional labels:**
+
+| Label | Values | Notes |
+|---|---|---|
+| `type` | `added`, `removed` | Direction of change |
+
+**Example values:** `694` added, `126` removed (for one session)
+
+**Example queries:**
+
+```promql
+# Net lines changed per developer
+sum by (user_email) (claude_code_lines_of_code_count_total{type="added"})
+- sum by (user_email) (claude_code_lines_of_code_count_total{type="removed"})
+
+# Total edits (churn) per project
+sum by (project) (claude_code_lines_of_code_count_total)
+```
+
+---
+
+### `claude_code_code_edit_tool_decision_total`
+
+**Type:** counter
+
+Permission decisions made for code editing tools (Edit, Write, NotebookEdit).
+
+**Additional labels:**
+
+| Label | Values | Notes |
+|---|---|---|
+| `decision` | `accept`, `reject` | Whether the edit was allowed |
+| `source` | `config` | How the decision was made |
+| `tool_name` | `Edit`, `Write`, `NotebookEdit` | Which tool was gated |
+| `language` | `python`, `typescript`, … | File language of the edit target |
+
+**Example queries:**
+
+```promql
+# Acceptance rate per developer
+sum by (user_email) (claude_code_code_edit_tool_decision_total{decision="accept"})
+/ sum by (user_email) (claude_code_code_edit_tool_decision_total)
+```
+
+---
+
+### `claude_code_session_count_total`
+
+**Type:** counter
+
+One increment per CLI session started.
+
+**Labels:** common set only (no extra labels). Each series represents one user/session/terminal combination.
+
+**Example queries:**
+
+```promql
+# Sessions per developer (count distinct session_id series)
+count by (user_email) (claude_code_session_count_total)
+
+# Sessions per project
+count by (project) (claude_code_session_count_total)
+```
+
+---
+
+### `claude_code_commit_count_total`
+
+**Type:** counter
+
+Git commits created during Claude Code sessions.
+
+**Labels:** common set only.
+
+**Example queries:**
+
+```promql
+# Commits per developer this week
+sum by (user_email) (increase(claude_code_commit_count_total[7d]))
+```
+
+---
+
+### `claude_code_pull_request_count_total`
+
+**Type:** counter
+
+Pull requests created during Claude Code sessions.
+
+**Labels:** common set only.
 
 ---
 
 ## gemini_cli — Gemini CLI metrics
 
-These appear in the local instance — likely from another team member running the Gemini CLI with OTel enabled.
+Emitted by the Gemini CLI. Uses `gemini-2.5-flash-lite` model. Appears when any team member runs the Gemini CLI with OTel enabled.
 
-| Prometheus metric (queried as) | Type | Description |
+### Common labels on all gemini_cli_* metrics
+
+| Label | Example values | Notes |
 |---|---|---|
-| `gemini_cli_api_request_count_total` | counter | API requests, tagged by model and status |
-| `gemini_cli_api_request_latency_milliseconds` | histogram | Latency of API requests in milliseconds |
-| `gemini_cli_file_operation_count_total` | counter | File operations (create, read, update) |
-| `gemini_cli_keychain_availability_count_total` | counter | Keychain availability checks |
-| `gemini_cli_model_routing_latency_milliseconds` | histogram | Latency of model routing decisions in milliseconds |
-| `gemini_cli_session_count_total` | counter | Count of CLI sessions started |
-| `gemini_cli_startup_duration_milliseconds` | histogram | CLI startup time broken down by initialization phase |
-| `gemini_cli_token_storage_type_count_total` | counter | Token storage type initializations |
-| `gemini_cli_token_usage_total` | counter | Total number of tokens used |
-| `gemini_cli_tool_call_count_total` | counter | Tool calls, tagged by function name and success |
-| `gemini_cli_tool_call_latency_milliseconds` | histogram | Latency of tool calls in milliseconds |
+| `user_email` | `chaitanya.chowgule@kilowott.com` | |
+| `model` | `gemini-2.5-flash-lite` | |
+| `project` | `claude-code-monitoring-guide` | |
+| `session_id` | `9f075be3-eff1-4d42-9641-9721e7ace092` | |
+| `installation_id` | `61743add-e516-4827-a521-55b4ad98f377` | Stable per machine |
+| `interactive` | `true` | Whether session was interactive |
+| `auth_type` | `oauth-personal` | |
+| `experiments_ids` | `[106018683, …]` | Long list of A/B experiment IDs — **high cardinality label, avoid grouping by this** |
+
+---
+
+### `gemini_cli_token_usage_total`
+
+**Type:** counter | **Unit:** tokens
+
+**`type` label values:**
+
+| Value | Meaning |
+|---|---|
+| `input` | Prompt tokens |
+| `output` | Completion tokens |
+| `thought` | Internal thinking/reasoning tokens |
+| `cache` | Cached context tokens |
+| `tool` | Tokens used in tool calls |
+
+**Example values:** `input=8638`, `output=581`, `thought=905`, `cache=0`, `tool=0`
+
+**Example queries:**
+
+```promql
+# Total Gemini tokens
+sum by (user_email, type) (gemini_cli_token_usage_total)
+
+# Thinking token fraction
+sum(gemini_cli_token_usage_total{type="thought"})
+/ sum(gemini_cli_token_usage_total{type=~"input|output|thought"})
+```
+
+---
+
+### `gemini_cli_session_count_total`
+
+**Type:** counter — Sessions started.
+
+### `gemini_cli_api_request_count_total`
+
+**Type:** counter — API requests, tagged by `model` and `status`.
+
+### `gemini_cli_file_operation_count_total`
+
+**Type:** counter — File operations (`create`, `read`, `update`).
+
+### `gemini_cli_tool_call_count_total`
+
+**Type:** counter — Tool calls, tagged by function name and success.
+
+### `gemini_cli_keychain_availability_count_total`
+
+**Type:** counter — Keychain availability checks.
+
+### `gemini_cli_token_storage_type_count_total`
+
+**Type:** counter — Token storage type initializations.
+
+### `gemini_cli_api_request_latency_milliseconds`
+
+**Type:** histogram — API request latency in milliseconds.
+
+### `gemini_cli_model_routing_latency_milliseconds`
+
+**Type:** histogram — Model routing decision latency.
+
+### `gemini_cli_startup_duration_milliseconds`
+
+**Type:** histogram — CLI startup time broken down by initialization phase.
+
+### `gemini_cli_tool_call_latency_milliseconds`
+
+**Type:** histogram — Tool call latency in milliseconds.
 
 ---
 
 ## gen_ai_client — OpenTelemetry GenAI semantic conventions
 
-Standard OTel GenAI client metrics (provider-agnostic).
+Provider-agnostic GenAI metrics following the OTel semantic conventions. Emitted by the Gemini CLI via the OTel GenAI instrumentation layer.
 
-| Prometheus metric (queried as) | Type | Description |
-|---|---|---|
-| `gen_ai_client_operation_duration_seconds` | histogram | GenAI operation duration |
-| `gen_ai_client_token_usage` | histogram | Number of input and output tokens used |
+### `gen_ai_client_operation_duration_seconds`
 
----
+**Type:** histogram — End-to-end GenAI operation duration.
 
-## go — Go runtime metrics
+**Labels:** `gen_ai_system` (e.g. `vertex_ai`), `gen_ai_operation_name`, `gen_ai_request_model`, `server_address`
 
-Emitted by the Prometheus server's own Go runtime. Not useful for productivity dashboards.
+### `gen_ai_client_token_usage`
 
-| Prometheus metric | Type | Description |
-|---|---|---|
-| `go_gc_cleanups_executed_cleanups_total` | counter | Cleanup functions executed by the runtime |
-| `go_gc_cleanups_queued_cleanups_total` | counter | Cleanup functions queued by the runtime |
-| `go_gc_cycles_automatic_gc_cycles_total` | counter | Completed GC cycles generated by the Go runtime |
-| `go_gc_cycles_forced_gc_cycles_total` | counter | Completed GC cycles forced by the application |
-| `go_gc_cycles_total_gc_cycles_total` | counter | All completed GC cycles |
-| `go_gc_duration_seconds` | summary | Wall-time pause duration in GC cycles |
-| `go_gc_finalizers_executed_finalizers_total` | counter | Finalizer functions executed |
-| `go_gc_finalizers_queued_finalizers_total` | counter | Finalizer functions queued |
-| `go_gc_gogc_percent` | gauge | Heap size target percentage (GOGC env) |
-| `go_gc_gomemlimit_bytes` | gauge | Go runtime memory limit (GOMEMLIMIT env) |
-| `go_gc_heap_allocs_by_size_bytes` | histogram | Heap allocations distribution by size |
-| `go_gc_heap_allocs_bytes_total` | counter | Cumulative heap memory allocated |
-| `go_gc_heap_allocs_objects_total` | counter | Cumulative heap allocation count |
-| `go_gc_heap_frees_by_size_bytes` | histogram | Freed heap allocations distribution by size |
-| `go_gc_heap_frees_bytes_total` | counter | Cumulative heap memory freed by GC |
-| `go_gc_heap_frees_objects_total` | counter | Cumulative heap allocation free count |
-| `go_gc_heap_goal_bytes` | gauge | Heap size target for end of GC cycle |
-| `go_gc_heap_live_bytes` | gauge | Heap memory occupied by live objects |
-| `go_gc_heap_objects_objects` | gauge | Live or unswept objects in heap |
-| `go_gc_heap_tiny_allocs_objects_total` | counter | Small allocations packed into blocks |
-| `go_gc_limiter_last_enabled_gc_cycle` | gauge | GC cycle when CPU limiter was last enabled |
-| `go_gc_pauses_seconds` | histogram | GC pause latency distribution (deprecated, prefer `go_sched_pauses_total_gc_seconds`) |
-| `go_gc_scan_globals_bytes` | gauge | Scannable global variable space |
-| `go_gc_scan_heap_bytes` | gauge | Scannable heap space |
-| `go_gc_scan_stack_bytes` | gauge | Stack bytes scanned last GC cycle |
-| `go_gc_scan_total_bytes` | gauge | Total scannable space |
-| `go_gc_stack_starting_size_bytes` | gauge | Stack size of new goroutines |
-| `go_goroutines` | gauge | Number of goroutines that currently exist |
-| `go_info` | gauge | Go environment info (version labels) |
-| `go_memstats_alloc_bytes` | gauge | Bytes allocated in heap, currently in use |
-| `go_memstats_alloc_bytes_total` | counter | Total bytes allocated in heap ever |
-| `go_memstats_buck_hash_sys_bytes` | gauge | Bytes used by profiling bucket hash table |
-| `go_memstats_frees_total` | counter | Total heap object frees |
-| `go_memstats_gc_sys_bytes` | gauge | Bytes used for GC system metadata |
-| `go_memstats_heap_alloc_bytes` | gauge | Heap bytes allocated and in use |
-| `go_memstats_heap_idle_bytes` | gauge | Heap bytes waiting to be used |
-| `go_memstats_heap_inuse_bytes` | gauge | Heap bytes in use |
-| `go_memstats_heap_objects` | gauge | Currently allocated objects |
-| `go_memstats_heap_released_bytes` | gauge | Heap bytes released to OS |
-| `go_memstats_heap_sys_bytes` | gauge | Heap bytes obtained from system |
-| `go_memstats_last_gc_time_seconds` | gauge | Unix timestamp of last GC |
-| `go_memstats_mallocs_total` | counter | Total heap objects allocated (live + GC'd) |
-| `go_memstats_mcache_inuse_bytes` | gauge | Bytes in use by mcache structures |
-| `go_memstats_mcache_sys_bytes` | gauge | Bytes used for mcache from system |
-| `go_memstats_mspan_inuse_bytes` | gauge | Bytes in use by mspan structures |
-| `go_memstats_mspan_sys_bytes` | gauge | Bytes used for mspan from system |
-| `go_memstats_next_gc_bytes` | gauge | Heap bytes at which next GC will occur |
-| `go_memstats_other_sys_bytes` | gauge | Bytes used for other system allocations |
-| `go_memstats_stack_inuse_bytes` | gauge | Bytes from system for stack allocator (non-CGO) |
-| `go_memstats_stack_sys_bytes` | gauge | Bytes from system for stack allocator |
-| `go_memstats_sys_bytes` | gauge | Total bytes obtained from system |
-| `go_sched_gomaxprocs_threads` | gauge | Current GOMAXPROCS setting |
-| `go_sched_goroutines_created_goroutines_total` | counter | Goroutines created since program start |
-| `go_sched_goroutines_goroutines` | gauge | Live goroutines |
-| `go_sched_goroutines_not_in_go_goroutines` | gauge | Goroutines in syscall or cgo |
-| `go_sched_goroutines_runnable_goroutines` | gauge | Goroutines ready to run but not running |
-| `go_sched_goroutines_running_goroutines` | gauge | Goroutines currently executing |
-| `go_sched_goroutines_waiting_goroutines` | gauge | Goroutines waiting on I/O or sync |
-| `go_sched_latencies_seconds` | histogram | Scheduler runnable-wait latency distribution |
-| `go_sched_pauses_stopping_gc_seconds` | histogram | GC stop-the-world stopping latency distribution |
-| `go_sched_pauses_stopping_other_seconds` | histogram | Non-GC stop-the-world stopping latency distribution |
-| `go_sched_pauses_total_gc_seconds` | histogram | Total GC stop-the-world pause latency |
-| `go_sched_pauses_total_other_seconds` | histogram | Total non-GC stop-the-world pause latency |
-| `go_sched_threads_total_threads` | gauge | Live threads owned by Go runtime |
-| `go_sync_mutex_wait_total_seconds_total` | counter | Cumulative time goroutines spent blocked on mutexes |
-| `go_threads` | gauge | Number of OS threads created |
+**Type:** histogram — Input and output tokens, tagged by `gen_ai_token_type` (`input`, `output`).
 
 ---
 
-## net_conntrack — Network connection tracking
+## Infrastructure metrics (Prometheus self-monitoring)
 
-| Prometheus metric | Type | Description |
-|---|---|---|
-| `net_conntrack_dialer_conn_attempted_total` | counter | Connections attempted by dialer |
-| `net_conntrack_dialer_conn_closed_total` | counter | Connections closed by dialer |
-| `net_conntrack_dialer_conn_established_total` | counter | Connections successfully established by dialer |
-| `net_conntrack_dialer_conn_failed_total` | counter | Connections failed to dial |
-| `net_conntrack_listener_conn_accepted_total` | counter | Connections accepted by listener |
-| `net_conntrack_listener_conn_closed_total` | counter | Connections closed at listener |
+These are emitted by Prometheus, the OTel collector Go runtime, and the OS. Not useful for productivity dashboards. Listed here for completeness.
 
----
+| Namespace | What it covers |
+|---|---|
+| `go_*` | Go runtime: GC, goroutines, memory, scheduler |
+| `process_*` | OS process: CPU, memory, file descriptors |
+| `net_conntrack_*` | Network connection tracking |
+| `prometheus_*` | Prometheus internals: scrape pools, TSDB, WAL, query engine |
+| `promhttp_*` | HTTP handler for `/metrics` scrape endpoint |
+| `scrape_*` / `up` | Scrape health per target |
 
-## process — OS process metrics
-
-| Prometheus metric | Type | Description |
-|---|---|---|
-| `process_cpu_seconds_total` | counter | Total user and system CPU time |
-| `process_max_fds` | gauge | Maximum open file descriptors |
-| `process_network_receive_bytes_total` | counter | Bytes received over the network |
-| `process_network_transmit_bytes_total` | counter | Bytes sent over the network |
-| `process_open_fds` | gauge | Current open file descriptors |
-| `process_resident_memory_bytes` | gauge | Resident memory size |
-| `process_start_time_seconds` | gauge | Process start time (unix epoch) |
-| `process_virtual_memory_bytes` | gauge | Virtual memory size |
-| `process_virtual_memory_max_bytes` | gauge | Maximum virtual memory available |
+See the original listing in git history for full descriptions.
 
 ---
 
-## prometheus — Prometheus self-monitoring
+# Part 2 — Loki Logs
 
-Internal health metrics for the Prometheus server itself.
+## Stream labels (use in `{}` selector)
 
-| Prometheus metric | Type | Description |
+| Label | Values seen | Notes |
 |---|---|---|
-| `prometheus_api_notification_active_subscribers` | gauge | Active notification subscribers |
-| `prometheus_api_notification_updates_dropped_total` | counter | Notification updates dropped |
-| `prometheus_api_notification_updates_sent_total` | counter | Notification updates sent |
-| `prometheus_build_info` | gauge | Build info (version, revision, branch, goversion) |
-| `prometheus_config_last_reload_success_timestamp_seconds` | gauge | Timestamp of last successful config reload |
-| `prometheus_config_last_reload_successful` | gauge | Whether last config reload succeeded |
-| `prometheus_engine_queries` | gauge | Queries currently executing or waiting |
-| `prometheus_engine_queries_concurrent_max` | gauge | Max concurrent queries |
-| `prometheus_engine_query_duration_histogram_seconds` | histogram | PromQL query execution duration |
-| `prometheus_engine_query_duration_seconds` | summary | Query timings |
-| `prometheus_engine_query_log_enabled` | gauge | Whether query log is enabled |
-| `prometheus_engine_query_log_failures_total` | counter | Query log failures |
-| `prometheus_engine_query_samples_total` | counter | Total samples loaded by all queries |
-| `prometheus_http_request_duration_seconds` | histogram | HTTP request latency |
-| `prometheus_http_requests_total` | counter | HTTP requests total |
-| `prometheus_http_response_size_bytes` | histogram | HTTP response size |
-| `prometheus_notifications_alertmanagers_discovered` | gauge | Alertmanagers discovered and active |
-| `prometheus_notifications_queue_capacity` | gauge | Alert notifications queue capacity |
-| `prometheus_ready` | gauge | Whether Prometheus is ready for normal operation |
-| `prometheus_remote_read_handler_queries` | gauge | Remote read queries in execution or queued |
-| `prometheus_remote_storage_exemplars_in_total` | counter | Exemplars in to remote storage (deprecated) |
-| `prometheus_remote_storage_highest_timestamp_in_seconds` | gauge | Highest timestamp in remote storage (deprecated) |
-| `prometheus_remote_storage_histograms_in_total` | counter | Histogram samples in to remote storage (deprecated) |
-| `prometheus_remote_storage_samples_in_total` | counter | Samples in to remote storage (deprecated) |
-| `prometheus_remote_storage_string_interner_zero_reference_releases_total` | counter | String interner zero-reference releases |
-| `prometheus_rule_evaluation_duration_histogram_seconds` | histogram | Rule execution duration |
-| `prometheus_rule_evaluation_duration_seconds` | summary | Rule execution duration |
-| `prometheus_rule_group_duration_histogram_seconds` | histogram | Rule group evaluation duration |
-| `prometheus_rule_group_duration_seconds` | summary | Rule group evaluation duration |
-| `prometheus_sd_azure_cache_hit_total` | counter | Azure SD cache hits |
-| `prometheus_sd_azure_failures_total` | counter | Azure SD refresh failures |
-| `prometheus_sd_consul_rpc_duration_seconds` | summary | Consul RPC call duration |
-| `prometheus_sd_consul_rpc_failures_total` | counter | Consul RPC failures |
-| `prometheus_sd_discovered_targets` | gauge | Currently discovered targets |
-| `prometheus_sd_dns_lookup_failures_total` | counter | DNS-SD lookup failures |
-| `prometheus_sd_dns_lookups_total` | counter | DNS-SD lookups |
-| `prometheus_sd_failed_configs` | gauge | SD configs that failed to load |
-| `prometheus_sd_file_read_errors_total` | counter | File-SD read errors |
-| `prometheus_sd_file_scan_duration_seconds` | summary | File-SD scan duration |
-| `prometheus_sd_file_watcher_errors_total` | counter | File-SD filesystem watch failures |
-| `prometheus_sd_http_failures_total` | counter | HTTP SD refresh failures |
-| `prometheus_sd_kubernetes_events_total` | counter | Kubernetes events handled |
-| `prometheus_sd_kubernetes_failures_total` | counter | Kubernetes WATCH/LIST failures |
-| `prometheus_sd_kuma_fetch_duration_seconds` | summary | Kuma MADS fetch duration |
-| `prometheus_sd_kuma_fetch_failures_total` | counter | Kuma MADS fetch failures |
-| `prometheus_sd_kuma_fetch_skipped_updates_total` | counter | Kuma MADS fetches with no target updates |
-| `prometheus_sd_last_update_timestamp_seconds` | gauge | Timestamp of last SD update sent to consumers |
-| `prometheus_sd_linode_failures_total` | counter | Linode SD refresh failures |
-| `prometheus_sd_nomad_failures_total` | counter | Nomad SD refresh failures |
-| `prometheus_sd_received_updates_total` | counter | Update events received from SD providers |
-| `prometheus_sd_updates_delayed_total` | counter | Update events that could not be sent immediately |
-| `prometheus_sd_updates_total` | counter | Update events sent to SD consumers |
-| `prometheus_target_interval_length_histogram_seconds` | histogram | Actual scrape intervals |
-| `prometheus_target_interval_length_seconds` | summary | Actual scrape intervals |
-| `prometheus_target_metadata_cache_bytes` | gauge | Bytes used for metric metadata cache |
-| `prometheus_target_metadata_cache_entries` | gauge | Metric metadata entries in cache |
-| `prometheus_target_scrape_duration_seconds` | histogram | Total scrape duration |
-| `prometheus_target_scrape_pool_exceeded_label_limits_total` | counter | Scrape pools hitting label limits |
-| `prometheus_target_scrape_pool_exceeded_target_limit_total` | counter | Scrape pools hitting target limits |
-| `prometheus_target_scrape_pool_reloads_failed_total` | counter | Failed scrape pool reloads |
-| `prometheus_target_scrape_pool_reloads_total` | counter | Scrape pool reloads |
-| `prometheus_target_scrape_pool_symboltable_items` | gauge | Symbols in scrape pool symbol table |
-| `prometheus_target_scrape_pool_sync_total` | counter | Syncs executed on a scrape pool |
-| `prometheus_target_scrape_pool_target_limit` | gauge | Max targets allowed in scrape pool |
-| `prometheus_target_scrape_pool_targets` | gauge | Current targets in scrape pool |
-| `prometheus_target_scrape_pools_failed_total` | counter | Failed scrape pool creations |
-| `prometheus_target_scrape_pools_total` | counter | Scrape pool creation attempts |
-| `prometheus_target_scrapes_cache_flush_forced_total` | counter | Forced scrape cache flushes |
-| `prometheus_target_scrapes_exceeded_body_size_limit_total` | counter | Scrapes hitting body size limit |
-| `prometheus_target_scrapes_exceeded_native_histogram_bucket_limit_total` | counter | Scrapes hitting native histogram bucket limit |
-| `prometheus_target_scrapes_exceeded_sample_limit_total` | counter | Scrapes hitting sample limit |
-| `prometheus_target_scrapes_exemplar_out_of_order_total` | counter | Out-of-order exemplars rejected |
-| `prometheus_target_scrapes_sample_duplicate_timestamp_total` | counter | Samples rejected for duplicate timestamps |
-| `prometheus_target_scrapes_sample_out_of_bounds_total` | counter | Samples rejected for out-of-bounds timestamps |
-| `prometheus_target_scrapes_sample_out_of_order_total` | counter | Samples rejected for out-of-order timestamps |
-| `prometheus_target_sync_failed_total` | counter | Target sync failures |
-| `prometheus_target_sync_length_histogram_seconds` | histogram | Scrape pool sync interval |
-| `prometheus_target_sync_length_seconds` | summary | Scrape pool sync interval |
-| `prometheus_template_text_expansion_failures_total` | counter | Template text expansion failures |
-| `prometheus_template_text_expansions_total` | counter | Template text expansions |
-| `prometheus_treecache_watcher_goroutines` | gauge | Watcher goroutines |
-| `prometheus_treecache_zookeeper_failures_total` | counter | ZooKeeper failures |
-| `prometheus_tsdb_blocks_loaded` | gauge | Currently loaded data blocks |
-| `prometheus_tsdb_checkpoint_creations_failed_total` | counter | Failed checkpoint creations |
-| `prometheus_tsdb_checkpoint_creations_total` | counter | Checkpoint creations attempted |
-| `prometheus_tsdb_checkpoint_deletions_failed_total` | counter | Failed checkpoint deletions |
-| `prometheus_tsdb_checkpoint_deletions_total` | counter | Checkpoint deletions attempted |
-| `prometheus_tsdb_clean_start` | gauge | Lockfile state: -1=disabled, 0=replaced, 1=clean |
-| `prometheus_tsdb_compaction_chunk_range_seconds` | histogram | Chunk time range on first compaction |
-| `prometheus_tsdb_compaction_chunk_samples` | histogram | Chunk sample count on first compaction |
-| `prometheus_tsdb_compaction_chunk_size_bytes` | histogram | Chunk size on first compaction |
-| `prometheus_tsdb_compaction_duration_seconds` | histogram | Compaction run duration |
-| `prometheus_tsdb_compaction_populating_block` | gauge | 1 when a block is being written to disk |
-| `prometheus_tsdb_compactions_failed_total` | counter | Failed compactions |
-| `prometheus_tsdb_compactions_skipped_total` | counter | Compactions skipped (auto-compaction disabled) |
-| `prometheus_tsdb_compactions_total` | counter | Executed compactions |
-| `prometheus_tsdb_compactions_triggered_total` | counter | Triggered compactions |
-| `prometheus_tsdb_data_replay_duration_seconds` | gauge | Time taken to replay data from disk |
-| `prometheus_tsdb_exemplar_exemplars_appended_total` | counter | Appended exemplars |
-| `prometheus_tsdb_exemplar_exemplars_in_storage` | gauge | Exemplars in circular storage |
-| `prometheus_tsdb_exemplar_last_exemplars_timestamp_seconds` | gauge | Oldest exemplar timestamp in storage |
-| `prometheus_tsdb_exemplar_max_exemplars` | gauge | Max exemplars the storage can hold |
-| `prometheus_tsdb_exemplar_out_of_order_exemplars_total` | counter | Out-of-order exemplar ingestion failures |
-| `prometheus_tsdb_exemplar_series_with_exemplars_in_storage` | gauge | Series with exemplars in storage |
-| `prometheus_tsdb_head_active_appenders` | gauge | Active appender transactions |
-| `prometheus_tsdb_head_chunks` | gauge | Total chunks in head block |
-| `prometheus_tsdb_head_chunks_created_total` | counter | Chunks created in head |
-| `prometheus_tsdb_head_chunks_removed_total` | counter | Chunks removed from head |
-| `prometheus_tsdb_head_chunks_storage_size_bytes` | gauge | Size of chunks_head directory |
-| `prometheus_tsdb_head_gc_duration_seconds` | summary | GC runtime in head block |
-| `prometheus_tsdb_head_max_time` | gauge | Maximum timestamp in head block (raw) |
-| `prometheus_tsdb_head_max_time_seconds` | gauge | Maximum timestamp in head block |
-| `prometheus_tsdb_head_min_time` | gauge | Minimum timestamp in head block (raw) |
-| `prometheus_tsdb_head_min_time_seconds` | gauge | Minimum timestamp in head block |
-| `prometheus_tsdb_head_out_of_order_samples_appended_total` | counter | Out-of-order samples appended |
-| `prometheus_tsdb_head_samples_appended_total` | counter | Total samples appended |
-| `prometheus_tsdb_head_series` | gauge | Total series in head block |
-| `prometheus_tsdb_head_series_created_total` | counter | Series created in head |
-| `prometheus_tsdb_head_series_not_found_total` | counter | Requests for series not found |
-| `prometheus_tsdb_head_series_removed_total` | counter | Series removed from head |
-| `prometheus_tsdb_head_stale_series` | gauge | Stale series in head block |
-| `prometheus_tsdb_head_truncations_failed_total` | counter | Failed head truncations |
-| `prometheus_tsdb_head_truncations_total` | counter | Head truncations attempted |
-| `prometheus_tsdb_isolation_high_watermark` | gauge | Highest TSDB append ID given out |
-| `prometheus_tsdb_isolation_low_watermark` | gauge | Lowest TSDB append ID still referenced |
-| `prometheus_tsdb_lowest_timestamp` | gauge | Lowest timestamp in database (raw) |
-| `prometheus_tsdb_lowest_timestamp_seconds` | gauge | Lowest timestamp in database |
-| `prometheus_tsdb_mmap_chunk_corruptions_total` | counter | Memory-mapped chunk corruptions |
-| `prometheus_tsdb_mmap_chunks_total` | counter | Chunks that were memory-mapped |
-| `prometheus_tsdb_out_of_bound_samples_total` | counter | Out-of-bound sample ingestion failures (OOO disabled) |
-| `prometheus_tsdb_out_of_order_samples_total` | counter | Out-of-order sample ingestion failures (OOO disabled) |
-| `prometheus_tsdb_reloads_failures_total` | counter | Database block reload failures |
-| `prometheus_tsdb_reloads_total` | counter | Database block reloads |
-| `prometheus_tsdb_retention_limit_bytes` | gauge | Max bytes retained in TSDB blocks (0=disabled) |
-| `prometheus_tsdb_retention_limit_percentage` | gauge | Max percentage of storage retained (0=disabled) |
-| `prometheus_tsdb_retention_limit_seconds` | gauge | How long to retain samples |
-| `prometheus_tsdb_sample_ooo_delta` | histogram | Delta (seconds) by which samples are considered out of order |
-| `prometheus_tsdb_size_retentions_total` | counter | Blocks deleted due to byte limit |
-| `prometheus_tsdb_snapshot_replay_error_total` | counter | Failed snapshot replays |
-| `prometheus_tsdb_stale_series_compaction_duration_seconds` | histogram | Stale series compaction run duration |
-| `prometheus_tsdb_stale_series_compactions_failed_total` | counter | Failed stale series compactions |
-| `prometheus_tsdb_stale_series_compactions_triggered_total` | counter | Triggered stale series compactions |
-| `prometheus_tsdb_storage_blocks_bytes` | gauge | Bytes used for local storage by all blocks |
-| `prometheus_tsdb_symbol_table_size_bytes` | gauge | Symbol table size in memory for loaded blocks |
-| `prometheus_tsdb_time_retentions_total` | counter | Blocks deleted due to time limit |
-| `prometheus_tsdb_tombstone_cleanup_seconds` | histogram | Time to recompact blocks to remove tombstones |
-| `prometheus_tsdb_too_old_samples_total` | counter | Out-of-order samples outside OOO time window |
-| `prometheus_tsdb_vertical_compactions_total` | counter | Compactions on overlapping blocks |
-| `prometheus_tsdb_wal_completed_pages_total` | counter | Completed WAL pages |
-| `prometheus_tsdb_wal_corruptions_total` | counter | WAL corruptions |
-| `prometheus_tsdb_wal_fsync_duration_seconds` | summary | WAL fsync duration |
-| `prometheus_tsdb_wal_page_flushes_total` | counter | WAL page flushes |
-| `prometheus_tsdb_wal_record_bytes_saved_total` | counter | Bytes saved by WAL record compression |
-| `prometheus_tsdb_wal_record_part_writes_total` | counter | WAL record parts written before flushing |
-| `prometheus_tsdb_wal_record_parts_bytes_written_total` | counter | WAL record part bytes written before flushing |
-| `prometheus_tsdb_wal_segment_current` | gauge | Current WAL segment index |
-| `prometheus_tsdb_wal_storage_size_bytes` | gauge | Size of WAL directory |
-| `prometheus_tsdb_wal_truncate_duration_seconds` | summary | WAL truncation duration |
-| `prometheus_tsdb_wal_truncations_failed_total` | counter | Failed WAL truncations |
-| `prometheus_tsdb_wal_truncations_total` | counter | WAL truncations attempted |
-| `prometheus_tsdb_wal_writes_failed_total` | counter | Failed WAL writes |
-| `prometheus_web_federation_errors_total` | counter | Errors sending federation responses |
-| `prometheus_web_federation_warnings_total` | counter | Warnings sending federation responses |
+| `service_name` | `claude-code`, `gemini-cli` | Primary selector |
+| `service_version` | `2.1.121`, `2.1.123` (Claude), `v24.14.1` (Gemini) | CLI version |
+| `project` | `claude-code-monitoring-guide`, `unknown` | Repo context |
+| `os_type` | `windows`, `linux` | Developer OS |
 
 ---
 
-## promhttp — HTTP handler metrics
+## claude-code events
 
-| Prometheus metric | Type | Description |
+Each log line is a Claude Code event. The `line` field is a short human-readable summary. Filter by event type with `| logfmt | event_name="<name>"`.
+
+### Event types
+
+| `event_name` | Line example | When emitted |
 |---|---|---|
-| `promhttp_metric_handler_requests_in_flight` | gauge | Scrapes currently being served |
-| `promhttp_metric_handler_requests_total` | counter | Total scrapes by HTTP status code |
+| `api_request` | `claude_code.api_request` | Each call to the Anthropic API |
+| `api_response` | `claude_code.api_response` | When API response is received |
+| `tool_decision` | `claude_code.tool_decision` | When a tool use permission is evaluated |
+| `tool_result` | `claude_code.tool_result` | When a tool finishes executing |
+| `hook_execution_complete` | `claude_code.hook_execution_complete` | When a Claude Code hook runs |
 
 ---
 
-## scrape / up — Scrape health
+### Structured metadata — `api_request`
 
-| Prometheus metric | Type | Description |
+| Field | Example | Notes |
 |---|---|---|
-| `scrape_duration_seconds` | gauge | Duration of the scrape |
-| `scrape_samples_post_metric_relabeling` | gauge | Sample count after metric relabeling |
-| `scrape_samples_scraped` | gauge | Samples scraped from target |
-| `scrape_series_added` | gauge | New series added in this scrape |
-| `up` | gauge | 1 if target is reachable, 0 if not |
+| `event_name` | `api_request` | |
+| `event_timestamp` | `2026-04-29T11:07:36.448Z` | When event occurred |
+| `session_id` | `7ef38ec7-9605-4df0-8463-474fd90f0e2b` | Session that made the call |
+| `prompt_id` | `49f4a1b2-dd9c-490e-94d3-62d3360d2a6f` | Prompt turn ID |
+| `request_id` | `req_011CaXxQj5FQPEj24g8Xtv6A` | Anthropic request ID |
+| `model` | `claude-opus-4-7[1m]` | Model called |
+| `effort` | `xhigh` | Extended thinking effort |
+| `query_source` | `repl_main_thread`, `sdk` | What triggered the call |
+| `speed` | `normal` | |
+| `duration_ms` | `4561` | API call wall-clock time |
+| `input_tokens` | `1` | Non-cache input tokens |
+| `output_tokens` | `256` | Output tokens |
+| `cache_creation_tokens` | `380` | Tokens written to cache this call |
+| `cache_read_tokens` | `115866` | Tokens read from cache this call |
+| `cost_usd` | `0.066713` | Per-request USD cost |
+| `user_email` | `ajaj.rajguru@kilowott.com` | |
+| `user_id` | `593a40fe…` | |
+| `organization_id` | `d706bcff-05bb-483c-a49a-84f9aad43ed8` | |
+| `terminal_type` | `windows-terminal` | |
+| `host_arch` | `amd64` | |
+| `os_version` | `10.0.22621` | |
+
+**Key use:** per-request cost, cache efficiency, latency distribution — data that Prometheus only has as aggregated counters.
+
+**Example LogQL:**
+
+```logql
+# All API requests for a developer
+{service_name="claude-code"} | logfmt | event_name="api_request" | user_email="ajaj.rajguru@kilowott.com"
+
+# Requests using extended thinking
+{service_name="claude-code"} | logfmt | event_name="api_request" | effort="xhigh"
+
+# Average API latency (metric query)
+avg_over_time(
+  {service_name="claude-code"} | logfmt | event_name="api_request" | unwrap duration_ms [$__range]
+)
+
+# Cache read tokens per request over time
+sum_over_time(
+  {service_name="claude-code"} | logfmt | event_name="api_request" | unwrap cache_read_tokens [1h]
+)
+```
+
+---
+
+### Structured metadata — `tool_result`
+
+| Field | Example | Notes |
+|---|---|---|
+| `event_name` | `tool_result` | |
+| `tool_name` | `Edit`, `Bash`, `Write`, `Read` | Which tool ran |
+| `tool_use_id` | `toolu_01HZ5mzXicUXveKKoa1MDAu2` | Links to the tool_decision event |
+| `tool_input_size_bytes` | `351` | Size of input sent to tool |
+| `tool_result_size_bytes` | `129` | Size of tool output |
+| `duration_ms` | `11` | Tool execution time |
+| `success` | `true` | Whether tool succeeded |
+| `decision_type` | `accept` | Permission decision that allowed this |
+| `decision_source` | `config` | What granted permission |
+| `session_id`, `prompt_id`, `user_email` | — | As above |
+
+**Example LogQL:**
+
+```logql
+# Bash tool executions with duration
+{service_name="claude-code"} | logfmt | event_name="tool_result" | tool_name="Bash"
+
+# Failed tool calls
+{service_name="claude-code"} | logfmt | event_name="tool_result" | success="false"
+
+# Average tool latency by tool name
+avg by (tool_name) (
+  avg_over_time(
+    {service_name="claude-code"} | logfmt | event_name="tool_result" | unwrap duration_ms [$__range]
+  )
+)
+```
+
+---
+
+### Structured metadata — `tool_decision`
+
+| Field | Example | Notes |
+|---|---|---|
+| `event_name` | `tool_decision` | |
+| `tool_name` | `Edit`, `Bash` | Tool being gated |
+| `tool_use_id` | `toolu_01HZ5mzXicUXveKKoa1MDAu2` | Links to tool_result |
+| `decision` | `accept`, `reject` | Permission outcome |
+| `source` | `config` | Decision source |
+| `session_id`, `prompt_id`, `user_email` | — | As above |
+
+---
+
+### Structured metadata — `hook_execution_complete`
+
+| Field | Example | Notes |
+|---|---|---|
+| `event_name` | `hook_execution_complete` | |
+| `hook_name` | `Stop` | Hook type |
+| `hook_event` | `Stop` | |
+| `hook_source` | `merged` | |
+| `num_hooks` | `1` | |
+| `num_success` | `1` | |
+| `num_blocking` | `0` | |
+| `num_non_blocking_error` | `0` | |
+| `num_cancelled` | `0` | |
+| `total_duration_ms` | `4` | |
+
+---
+
+## gemini-cli events
+
+### Event types
+
+| `event_name` | Line example | When emitted |
+|---|---|---|
+| `gemini_cli.api_request` | `API request to gemini-2.5-flash-lite.` | Each API call sent |
+| `gemini_cli.api_response` | `API response from gemini-2.5-flash-lite. Status: 200. Duration: 5799ms.` | API response received |
+| `gen_ai.client.inference.operation.details` | `GenAI operation details from gemini-2.5-flash-lite. Status: 200.` | OTel GenAI span details |
+| `gemini_cli.plan.approval_mode_duration` | `Approval mode default was active for 38926ms.` | When plan approval phase ends |
+| `gemini_cli.slash_command` | `Slash command: quit.` | When user runs a `/` command |
+
+---
+
+### Structured metadata — `gemini_cli.api_response`
+
+| Field | Example | Notes |
+|---|---|---|
+| `event_name` | `gemini_cli.api_response` | |
+| `model` | `gemini-2.5-flash-lite` | |
+| `duration_ms` | `5799` | API latency |
+| `http_status_code` | `200` | |
+| `input_token_count` | `8638` | |
+| `output_token_count` | `581` | |
+| `thoughts_token_count` | `905` | Thinking tokens |
+| `tool_token_count` | `0` | |
+| `cached_content_token_count` | `0` | |
+| `total_token_count` | `10124` | |
+| `finish_reasons` | `STOP` | |
+| `prompt_id` | `…` | |
+| `session_id` | `9f075be3-…` | |
+| `user_email` | `chaitanya.chowgule@kilowott.com` | |
+| `span_id`, `trace_id` | `…` | OTel trace correlation |
+| `response_text` | _(truncated)_ | Full response text — large field |
+| `role` | `model` | |
+| `host_name` | `pop-os` | Machine hostname |
+| `process_owner` | `chaits` | OS user |
+| `installation_id` | `61743add-…` | Stable device ID |
+
+---
+
+### Structured metadata — `gemini_cli.api_request`
+
+| Field | Example | Notes |
+|---|---|---|
+| `model` | `gemini-2.5-flash-lite` | |
+| `prompt_id` | `…` | |
+| `request_text` | _(truncated)_ | Full prompt text — large field |
+| `role` | `user` | |
+| `span_id`, `trace_id` | `…` | OTel trace IDs |
+| `flags` | `…` | Feature flags active |
+| `session_id`, `user_email` | — | As above |
+
+---
+
+### Structured metadata — `gen_ai.client.inference.operation.details`
+
+| Field | Example | Notes |
+|---|---|---|
+| `gen_ai_operation_name` | `chat` | |
+| `gen_ai_provider_name` | `google_ai_studio` | |
+| `gen_ai_request_model` | `gemini-2.5-flash-lite` | |
+| `gen_ai_response_model` | `gemini-2.5-flash-lite-preview-06-17` | Resolved model name |
+| `gen_ai_request_temperature` | `1` | |
+| `gen_ai_request_top_k` | `40` | |
+| `gen_ai_request_top_p` | `0.95` | |
+| `gen_ai_response_finish_reasons` | `STOP` | |
+| `gen_ai_response_id` | `…` | |
+| `gen_ai_usage_input_tokens` | `8638` | |
+| `gen_ai_usage_output_tokens` | `581` | |
+| `server_address` | `generativelanguage.googleapis.com` | |
+| `server_port` | `443` | |
+| `span_id`, `trace_id` | `…` | Full OTel trace correlation |
+
+---
+
+### Common Gemini structured metadata (all events)
+
+| Field | Example | Notes |
+|---|---|---|
+| `auth_type` | `oauth-personal` | |
+| `installation_id` | `61743add-e516-4827-a521-55b4ad98f377` | Stable per machine |
+| `interactive` | `true` | |
+| `host_name` | `pop-os` | |
+| `host_arch` | `amd64` | |
+| `process_owner` | `chaits` | |
+| `process_pid` | `…` | |
+| `process_runtime_name` | `nodejs` | |
+| `process_runtime_version` | `24.14.1` | |
+| `process_command` | `/home/chaits/.nvm/…/gemini` | |
+| `experiments_ids` | `[106018683, …]` | Long list of A/B experiment IDs — omit from dashboards |
+
+---
+
+## Session counting with Loki
+
+Because `session_id` is structured metadata (not a stream label), count sessions with:
+
+```logql
+# Sessions per developer today
+count by (user_email) (
+  count_over_time(
+    {service_name="claude-code"} | logfmt | event_name="api_request" [$__range]
+  ) by (user_email, session_id)
+)
+```
+
+This is more accurate than using `claude_code_session_count_total` in Prometheus because it counts sessions that actually made API calls.

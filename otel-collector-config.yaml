@@ -39,6 +39,14 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, transform/promote_project, batch]
       exporters: [prometheus, debug]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [debug]
       
   extensions: []
   

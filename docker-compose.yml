@@ -1,4 +1,13 @@
 services:
+  # Loki — log aggregation; internal only, exposed via nginx in prod
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: ["-config.file=/etc/loki/loki-config.yaml"]
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki_data:/loki/data
+
   # OpenTelemetry Collector — publicly accessible for telemetry ingestion
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -10,6 +19,7 @@ services:
       - "0.0.0.0:4318:4318"   # OTLP HTTP — public
     depends_on:
       - prometheus
+      - loki
 
   # Prometheus — internal only; exposed via nginx in prod
   prometheus:
@@ -49,12 +59,15 @@ services:
     ports:
       - "0.0.0.0:80:80"
       - "0.0.0.0:9090:9090"
+      - "0.0.0.0:3100:3100"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - grafana
       - prometheus
+      - loki
 
 volumes:
   prometheus_data:
   grafana_data:
+  loki_data:

@@ -403,18 +403,7 @@
         }
       ],
       "title": "Edit Acceptance Rate by Language",
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "language"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        }
-      ],
+      "transformations": [],
       "type": "barchart"
     },
     {
@@ -464,7 +453,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"api_request\" [$__interval])\n/\ncount(sum by (session_id) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"api_request\" [$__interval])))",
+          "expr": "sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"api_request\" [$__interval]))\n/\ncount by () (sum by (session_id) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"api_request\" [$__interval])))",
           "legendFormat": "requests / session",
           "refId": "A"
         }
@@ -743,7 +732,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"tool_result\" [$__interval])\n/\ncount_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"api_request\" [$__interval])",
+          "expr": "sum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"tool_result\" [$__interval]))\n/\nsum(count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"api_request\" [$__interval]))",
           "legendFormat": "tools / request",
           "refId": "A"
         }

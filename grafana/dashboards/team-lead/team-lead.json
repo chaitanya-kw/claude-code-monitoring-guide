@@ -170,7 +170,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{decision=\"accept\",project=~\"$project\"}[$__range]))\n/\nsum by (user_email) (increase(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__range]))\n* 100",
+          "expr": "(\n  sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{decision=\"accept\",project=~\"$project\"}[$__range]))\n  or\n  sum by (user_email) (increase(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__range])) * 0\n)\n/\nsum by (user_email) (increase(claude_code_code_edit_tool_decision_total{project=~\"$project\"}[$__range]))\n* 100",
           "format": "table",
           "instant": true,
           "legendFormat": "{{user_email}}",
@@ -373,18 +373,7 @@
       ],
       "title": "Requests Per Session by Developer",
       "type": "barchart",
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        }
-      ]
+      "transformations": []
     },
     {
       "datasource": {
@@ -413,21 +402,21 @@
       "id": 6,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.97,
+        "barWidth": 0.7,
         "groupWidth": 0.7,
         "legend": {
           "displayMode": "list",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
-        "orientation": "auto",
+        "orientation": "horizontal",
         "stacking": "normal",
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         },
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 200
+        "xTickLabelSpacing": 0
       },
       "targets": [
         {
@@ -587,18 +576,7 @@
       ],
       "title": "Bash vs Edit Ratio by Developer",
       "type": "barchart",
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        }
-      ]
+      "transformations": []
     },
     {
       "datasource": {
@@ -655,18 +633,7 @@
       ],
       "title": "Tool Call Depth by Developer",
       "type": "barchart",
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        }
-      ]
+      "transformations": []
     },
     {
       "datasource": {
@@ -787,18 +754,7 @@
       ],
       "title": "Session Count by Developer",
       "type": "barchart",
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "user_email"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        }
-      ]
+      "transformations": []
     },
     {
       "datasource": {

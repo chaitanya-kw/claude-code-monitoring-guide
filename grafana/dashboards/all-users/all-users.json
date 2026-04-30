@@ -1,0 +1,99 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Each row is a developer whose Claude Code sessions have been received. Session count = distinct session_ids in the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "filterable": false,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "user_email" },
+            "properties": [
+              { "id": "displayName", "value": "User" },
+              { "id": "custom.width", "value": 300 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "displayName", "value": "Sessions" },
+              { "id": "custom.width", "value": 120 },
+              { "id": "custom.align", "value": "center" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 12, "w": 10, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "footer": { "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "Sessions" }]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "count by (user_email) (sum by (user_email, session_id) (count_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" [$__range])))",
+          "legendFormat": "{{user_email}}",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Sessions per User",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": { "mode": "columns" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "indexByName": { "user_email": 0, "Value": 1 },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "tags": ["claude-code", "admin"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30d", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "All Users",
+  "uid": "all-users",
+  "version": 1
+}

@@ -241,7 +241,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [$__interval]))",
+          "expr": "sum by (user_email) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | event_name=\"api_request\" [1d]))",
           "legendFormat": "{{user_email}}",
           "refId": "A"
         }
@@ -298,7 +298,6 @@
             "uid": "prometheus"
           },
           "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))",
-          "format": "table",
           "instant": true,
           "legendFormat": "{{user_email}}",
           "refId": "A"
@@ -307,11 +306,14 @@
       "title": "Token Usage by Developer",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "user_email",
-            "valueField": "Value"
+            "valueLabel": "user_email"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"
@@ -452,24 +454,19 @@
       "title": "Per Developer Per Model Token Usage",
       "transformations": [
         {
-          "id": "labelsToFields",
-          "options": {
-            "valueLabel": "model"
-          }
-        },
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true
-            },
-            "renameByName": {
-              "user_email": "Developer"
             }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "model",
+            "rowField": "user_email",
+            "valueField": "Value"
           }
         }
       ],
@@ -524,7 +521,6 @@
             "uid": "prometheus"
           },
           "expr": "sum by (user_email) (increase(claude_code_token_usage_tokens_total{query_source=\"subagent\",project=~\"$project\"}[$__range]))\n/\nsum by (user_email) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))\n* 100",
-          "format": "table",
           "instant": true,
           "legendFormat": "{{user_email}}",
           "refId": "A"
@@ -533,11 +529,14 @@
       "title": "Subagent Token Fraction by Developer",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "user_email",
-            "valueField": "Value"
+            "valueLabel": "user_email"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"
@@ -870,7 +869,6 @@
             "uid": "prometheus"
           },
           "expr": "topk(5, sum by (user_email) (rate(claude_code_token_usage_tokens_total{project=~\"$project\"}[5m])))",
-          "format": "table",
           "instant": true,
           "legendFormat": "{{user_email}}",
           "refId": "A"
@@ -879,11 +877,14 @@
       "title": "Top Consumers Right Now",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "user_email",
-            "valueField": "Value"
+            "valueLabel": "user_email"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"

@@ -397,7 +397,6 @@
             "uid": "prometheus"
           },
           "expr": "sum by (language) (increase(claude_code_code_edit_tool_decision_total{user_email=\"$user_email\",project=~\"$project\",decision=\"accept\"}[$__range]))\n/\nsum by (language) (increase(claude_code_code_edit_tool_decision_total{user_email=\"$user_email\",project=~\"$project\"}[$__range]))\n* 100",
-          "format": "table",
           "instant": true,
           "legendFormat": "{{language}}",
           "refId": "A"
@@ -406,11 +405,14 @@
       "title": "Edit Acceptance Rate by Language",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "language",
-            "valueField": "Value"
+            "valueLabel": "language"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"
@@ -630,10 +632,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"tool_result\" [$__interval]))",
+          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", project=~\"$project\"} | user_email=\"$user_email\" | event_name=\"tool_result\" [1d]))",
           "legendFormat": "{{tool_name}}",
-          "refId": "A",
-          "step": "1d"
+          "refId": "A"
         }
       ],
       "title": "Tool Call Mix Over Time",
@@ -802,7 +803,6 @@
             "uid": "prometheus"
           },
           "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total{user_email=\"$user_email\",project=~\"$project\"}[$__range]))",
-          "format": "table",
           "instant": true,
           "legendFormat": "{{model}}",
           "refId": "A"
@@ -811,11 +811,14 @@
       "title": "Model Usage",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "model",
-            "valueField": "Value"
+            "valueLabel": "model"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"

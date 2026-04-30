@@ -617,7 +617,6 @@
           },
           "editorMode": "code",
           "expr": "sum by (project) (increase(claude_code_cost_usage_USD_total{project=~\"$project\"}[$__range]))",
-          "format": "table",
           "instant": true,
           "legendFormat": "__auto",
           "refId": "A"
@@ -626,11 +625,14 @@
       "title": "Cost by Project",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "project",
-            "valueField": "Value"
+            "valueLabel": "project"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"
@@ -760,7 +762,6 @@
           },
           "editorMode": "code",
           "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total{project=~\"$project\"}[$__range]))",
-          "format": "table",
           "instant": true,
           "legendFormat": "__auto",
           "refId": "A"
@@ -769,11 +770,14 @@
       "title": "Overall Model Usage",
       "transformations": [
         {
-          "id": "rowsToFields",
+          "id": "labelsToFields",
           "options": {
-            "nameField": "model",
-            "valueField": "Value"
+            "valueLabel": "model"
           }
+        },
+        {
+          "id": "merge",
+          "options": {}
         }
       ],
       "type": "barchart"

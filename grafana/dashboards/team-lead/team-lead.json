@@ -357,8 +357,7 @@
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        },
-        "xField": "user_email"
+        }
       },
       "targets": [
         {
@@ -384,14 +383,6 @@
         {
           "id": "merge",
           "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            }
-          }
         }
       ]
     },
@@ -414,7 +405,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 14,
         "w": 12,
         "x": 0,
         "y": 25
@@ -606,14 +597,6 @@
         {
           "id": "merge",
           "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            }
-          }
         }
       ]
     },
@@ -682,14 +665,6 @@
         {
           "id": "merge",
           "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            }
-          }
         }
       ]
     },
@@ -742,7 +717,21 @@
         }
       ],
       "title": "Tool Call Failure Rate by Developer",
-      "type": "table"
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "user_email": "Developer",
+              "Value #A": "Failure Rate %"
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -808,14 +797,6 @@
         {
           "id": "merge",
           "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            }
-          }
         }
       ]
     },

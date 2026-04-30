@@ -387,6 +387,7 @@
           "mode": "single",
           "sort": "none"
         },
+        "xField": "language",
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 100
       },
@@ -403,7 +404,12 @@
         }
       ],
       "title": "Edit Acceptance Rate by Language",
-      "transformations": [],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        }
+      ],
       "type": "barchart"
     },
     {

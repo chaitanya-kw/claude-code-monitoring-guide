@@ -357,7 +357,8 @@
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xField": "user_email"
       },
       "targets": [
         {
@@ -373,7 +374,12 @@
       ],
       "title": "Requests Per Session by Developer",
       "type": "barchart",
-      "transformations": []
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        }
+      ]
     },
     {
       "datasource": {
@@ -560,7 +566,8 @@
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xField": "user_email"
       },
       "targets": [
         {
@@ -576,7 +583,12 @@
       ],
       "title": "Bash vs Edit Ratio by Developer",
       "type": "barchart",
-      "transformations": []
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        }
+      ]
     },
     {
       "datasource": {
@@ -617,7 +629,8 @@
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xField": "user_email"
       },
       "targets": [
         {
@@ -633,7 +646,12 @@
       ],
       "title": "Tool Call Depth by Developer",
       "type": "barchart",
-      "transformations": []
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        }
+      ]
     },
     {
       "datasource": {
@@ -738,7 +756,8 @@
         "tooltip": {
           "mode": "single",
           "sort": "none"
-        }
+        },
+        "xField": "user_email"
       },
       "targets": [
         {
@@ -754,7 +773,12 @@
       ],
       "title": "Session Count by Developer",
       "type": "barchart",
-      "transformations": []
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {}
+        }
+      ]
     },
     {
       "datasource": {
